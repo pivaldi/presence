@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Go library (`github.com/ovya/nullable`) that provides generic nullable types for any data type, with special focus on database operations and JSON marshaling/unmarshaling. The library uses Go generics to wrap values in a nullable container (`Of[T]`) that can represent SQL NULL values while maintaining type safety.
+This is a Go library (`github.com/pivaldi/nullable`) that provides generic nullable types for any data type, with special focus on database operations and JSON marshaling/unmarshaling. The library uses Go generics to wrap values in a nullable container (`Of[T]`) that can represent SQL NULL values while maintaining type safety.
 
 ### Core Architecture
 
@@ -121,7 +121,7 @@ The library integrates with `database/sql` through two interfaces:
 
 ## Common Gotchas
 
-1. **Module structure**: Root module (`github.com/ovya/nullable`) and test module (`github.com/ovya/nullable/tests`) are separate. Always run `go mod tidy` in both directories after dependency changes.
+1. **Module structure**: Root module (`github.com/pivaldi/nullable`) and test module (`github.com/pivaldi/nullable/tests`) are separate. Always run `go mod tidy` in both directories after dependency changes.
 
 2. **Test execution**: Integration tests require Docker to be running (testcontainers uses it). Run `cd tests && go test -v ./...` or `make test` for the full suite.
 

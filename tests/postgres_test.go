@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/ovya/nullable"
+	"github.com/pivaldi/nullable"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

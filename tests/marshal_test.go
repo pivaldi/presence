@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ovya/nullable"
+	"github.com/pivaldi/nullable"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

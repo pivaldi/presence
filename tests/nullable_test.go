@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/ovya/nullable"
+	"github.com/pivaldi/nullable"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

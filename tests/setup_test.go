@@ -10,7 +10,7 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/ovya/nullable"
+	"github.com/pivaldi/nullable"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -23,8 +23,8 @@ var aint = 42
 
 // Package-level variables for shared test infrastructure
 var (
-	testDB        *sql.DB                      // Shared database connection
-	testContainer *postgres.PostgresContainer  // Container reference for cleanup
+	testDB        *sql.DB                     // Shared database connection
+	testContainer *postgres.PostgresContainer // Container reference for cleanup
 )
 
 type embeddedStruct struct {

@@ -1,10 +1,10 @@
 # Go Nullable
 
-[![golangci-lint](https://github.com/ovya/nullable/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/ovya/nullable/actions/workflows/golangci-lint.yml)
-[![mod-verify](https://github.com/OVYA/nullable/actions/workflows/mod-verify.yml/badge.svg)](https://github.com/OVYA/nullable/actions/workflows/mod-verify.yml)
-[![gosec](https://github.com/OVYA/nullable/actions/workflows/gosec.yaml/badge.svg)](https://github.com/OVYA/nullable/actions/workflows/gosec.yaml)
-[![staticcheck](https://github.com/OVYA/nullable/actions/workflows/staticcheck.yaml/badge.svg)](https://github.com/OVYA/nullable/actions/workflows/staticcheck.yaml)
-[![test](https://github.com/OVYA/nullable/actions/workflows/test.yml/badge.svg)](https://github.com/OVYA/nullable/actions/workflows/test.yml)
+[![golangci-lint](https://github.com/pivaldi/nullable/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/golangci-lint.yml)
+[![mod-verify](https://github.com/pivaldi/nullable/actions/workflows/mod-verify.yml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/mod-verify.yml)
+[![gosec](https://github.com/pivaldi/nullable/actions/workflows/gosec.yaml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/gosec.yaml)
+[![staticcheck](https://github.com/pivaldi/nullable/actions/workflows/staticcheck.yaml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/staticcheck.yaml)
+[![test](https://github.com/pivaldi/nullable/actions/workflows/test.yml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/test.yml)
 
 A type-safe nullable value library for Go using generics, designed for seamless JSON marshaling and database operations.
 
@@ -21,13 +21,13 @@ A type-safe nullable value library for Go using generics, designed for seamless 
 ## Installation
 
 ```bash
-go get github.com/ovya/nullable
+go get github.com/pivaldi/nullable
 ```
 
 ## Quick Start
 
 ```go
-import "github.com/ovya/nullable"
+import "github.com/pivaldi/nullable"
 
 // Create nullable values
 name := nullable.FromValue("John Doe")
@@ -94,7 +94,7 @@ package main
 import (
     "encoding/json"
     "fmt"
-    "github.com/ovya/nullable"
+    "github.com/pivaldi/nullable"
 )
 
 type User struct {
@@ -138,7 +138,7 @@ func main() {
 import (
     "database/sql"
     "time"
-    "github.com/ovya/nullable"
+    "github.com/pivaldi/nullable"
     _ "github.com/jackc/pgx/v5/stdlib"
 )
 

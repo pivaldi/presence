@@ -1,4 +1,4 @@
-module github.com/ovya/nullable
+module github.com/pivaldi/nullable
 
 go 1.24
 
