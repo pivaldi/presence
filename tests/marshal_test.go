@@ -1121,6 +1121,162 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 	})
 }
 
+func TestMarshalJSON_ThreeState(t *testing.T) {
+	t.Run("unset marshals as null", func(t *testing.T) {
+		n := nullable.Of[string]{}
+		data, err := n.MarshalJSON()
+		require.NoError(t, err)
+		assert.Equal(t, []byte("null"), data, "unset should marshal as null")
+	})
+
+	t.Run("unset with UnsetSkip has IsZero true", func(t *testing.T) {
+		n := nullable.Of[string]{}
+		n.SetMarshalUnset(nullable.UnsetSkip)
+		assert.True(t, n.IsZero(), "unset with UnsetSkip should be zero for omitempty")
+	})
+
+	t.Run("unset with UnsetNull has IsZero false", func(t *testing.T) {
+		n := nullable.Of[string]{}
+		n.SetMarshalUnset(nullable.UnsetNull)
+		assert.False(t, n.IsZero(), "unset with UnsetNull should not be zero")
+	})
+
+	t.Run("explicit null always returns null", func(t *testing.T) {
+		n := nullable.Null[string]()
+		n.SetMarshalUnset(nullable.UnsetSkip) // should not affect null
+		data, err := n.MarshalJSON()
+		require.NoError(t, err)
+		assert.Equal(t, []byte("null"), data)
+	})
+
+	t.Run("value returns value regardless of config", func(t *testing.T) {
+		n := nullable.FromValue("test")
+		n.SetMarshalUnset(nullable.UnsetSkip)
+		data, err := n.MarshalJSON()
+		require.NoError(t, err)
+		assert.Equal(t, []byte(`"test"`), data)
+	})
+}
+
+func TestMarshalJSON_OmitZero(t *testing.T) {
+	// Note: omitzero is a Go 1.24+ feature that uses IsZero() to determine if a field should be omitted
+	type TestStruct struct {
+		Name nullable.Of[string] `json:"name,omitzero"`
+		Age  nullable.Of[int]    `json:"age,omitzero"`
+	}
+
+	t.Run("unset fields omitted with omitzero", func(t *testing.T) {
+		s := TestStruct{
+			Name: nullable.FromValue("John"),
+			// Age left as unset - should be omitted because IsZero() returns true
+		}
+		data, err := json.Marshal(s)
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"name":"John"}`, string(data))
+	})
+
+	t.Run("null fields included with omitzero", func(t *testing.T) {
+		s := TestStruct{
+			Name: nullable.FromValue("John"),
+			Age:  nullable.Null[int](), // explicitly null - IsZero() returns false
+		}
+		data, err := json.Marshal(s)
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"name":"John","age":null}`, string(data))
+	})
+
+	t.Run("value fields included with omitzero", func(t *testing.T) {
+		s := TestStruct{
+			Name: nullable.FromValue("John"),
+			Age:  nullable.FromValue(30),
+		}
+		data, err := json.Marshal(s)
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"name":"John","age":30}`, string(data))
+	})
+}
+
+func TestMarshalJSON_OmitEmpty(t *testing.T) {
+	// Note: omitempty does NOT use IsZero() - it uses its own rules for "empty"
+	// For custom types with MarshalJSON, omitempty checks if the marshaled value is
+	// "null", "false", 0, "", or empty array/map
+	type TestStruct struct {
+		Name nullable.Of[string] `json:"name,omitempty"`
+		Age  nullable.Of[int]    `json:"age,omitempty"`
+	}
+
+	t.Run("unset fields marshal as null with omitempty", func(t *testing.T) {
+		s := TestStruct{
+			Name: nullable.FromValue("John"),
+			// Age left as unset - marshals as null, included in output
+		}
+		data, err := json.Marshal(s)
+		require.NoError(t, err)
+		// Note: omitempty doesn't omit null for custom MarshalJSON types
+		assert.JSONEq(t, `{"name":"John","age":null}`, string(data))
+	})
+
+	t.Run("null fields included with omitempty", func(t *testing.T) {
+		s := TestStruct{
+			Name: nullable.FromValue("John"),
+			Age:  nullable.Null[int](),
+		}
+		data, err := json.Marshal(s)
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"name":"John","age":null}`, string(data))
+	})
+}
+
+func TestUnmarshalJSON_ThreeState(t *testing.T) {
+	t.Run("explicit null becomes null state", func(t *testing.T) {
+		var n nullable.Of[string]
+		err := n.UnmarshalJSON([]byte("null"))
+		require.NoError(t, err)
+		assert.True(t, n.IsNull())
+		assert.False(t, n.IsUnset())
+		assert.True(t, n.IsSet())
+	})
+
+	t.Run("missing field stays unset", func(t *testing.T) {
+		type TestStruct struct {
+			Name nullable.Of[string] `json:"name"`
+			Age  nullable.Of[int]    `json:"age"`
+		}
+		var s TestStruct
+		err := json.Unmarshal([]byte(`{"name":"John"}`), &s)
+		require.NoError(t, err)
+
+		assert.False(t, s.Name.IsUnset(), "name should be set")
+		assert.Equal(t, "John", *s.Name.GetValue())
+
+		assert.True(t, s.Age.IsUnset(), "age should be unset")
+		assert.False(t, s.Age.IsNull(), "age should not be null")
+	})
+
+	t.Run("explicit null in JSON becomes null", func(t *testing.T) {
+		type TestStruct struct {
+			Name nullable.Of[string] `json:"name"`
+			Age  nullable.Of[int]    `json:"age"`
+		}
+		var s TestStruct
+		err := json.Unmarshal([]byte(`{"name":"John","age":null}`), &s)
+		require.NoError(t, err)
+
+		assert.False(t, s.Age.IsUnset(), "age should not be unset")
+		assert.True(t, s.Age.IsNull(), "age should be null")
+	})
+
+	t.Run("value in JSON becomes value", func(t *testing.T) {
+		var n nullable.Of[int]
+		err := n.UnmarshalJSON([]byte("42"))
+		require.NoError(t, err)
+		assert.False(t, n.IsUnset())
+		assert.False(t, n.IsNull())
+		assert.True(t, n.IsSet())
+		assert.Equal(t, 42, *n.GetValue())
+	})
+}
+
 func TestMarshalUnmarshal(t *testing.T) {
 	obj := getTestObjs(getEmbeddedObj())
 	toObj := []testedStruct[embeddedStruct]{{}, {}}

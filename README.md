@@ -11,8 +11,10 @@ A type-safe nullable value library for Go using generics, designed for seamless 
 ## Features
 
 - **Type-safe nullable values** for any supported type using Go generics
+- **3-state model** distinguishing unset, null, and value states for PATCH API support
 - **Database-friendly** with built-in `sql.Scanner` and `driver.Valuer` implementations
 - **JSON marshaling** that uses standard `null` instead of `{Valid: true, Value: ...}`
+- **Configurable behavior** for marshal and scan operations (per-value and package-level)
 - **PostgreSQL JSON/JSONB support** for storing complex types
 - **UUID support** with `github.com/google/uuid`
 - **Zero external dependencies** (except `google/uuid`)
@@ -55,6 +57,95 @@ The library supports the following types through the `Of[T]` generic wrapper:
 - **String**: `string`
 - **UUID**: `uuid.UUID` (from `github.com/google/uuid`)
 - **JSON**: `nullable.JSON` (alias for `any`) - for complex types stored as JSON in database
+
+## Three-State Model
+
+The library supports a 3-state model for nullable values, enabling PATCH API semantics and partial updates:
+
+| State | Description | Creation |
+|-------|-------------|----------|
+| Unset | Field was never touched | `nullable.Of[T]{}` or `var x nullable.Of[T]` |
+| Null | Explicitly set to null | `nullable.Null[T]()` |
+| Value | Has a concrete value | `nullable.FromValue(x)` |
+
+### Checking State
+
+```go
+if value.IsUnset() {
+    // Field was never touched
+}
+if value.IsNull() {
+    // Field was explicitly set to null
+}
+if value.IsSet() {
+    // Field has null or value (not unset)
+}
+```
+
+### PATCH API Example
+
+```go
+type UpdateUserRequest struct {
+    Name  nullable.Of[string] `json:"name,omitempty"`
+    Email nullable.Of[string] `json:"email,omitempty"`
+    Age   nullable.Of[int]    `json:"age,omitempty"`
+}
+
+func UpdateUser(req UpdateUserRequest) {
+    if req.Name.IsSet() {
+        if req.Name.IsNull() {
+            // Clear the name
+        } else {
+            // Update with new name
+        }
+    }
+    // else: don't touch name field
+}
+
+// Handles all these requests correctly:
+// {}                              → no updates
+// {"name": "John"}                → update name only
+// {"name": "John", "age": null}   → update name, clear age
+// {"name": null, "age": null}     → clear both
+```
+
+### Configuration
+
+**JSON Marshaling with omitzero (Go 1.24+):**
+
+Unset values can be omitted from JSON output using the `omitzero` struct tag (introduced in Go 1.24). The `IsZero()` method returns `true` for unset values when `UnsetSkip` is configured:
+
+- `UnsetSkip` (default): `IsZero()` returns `true` for unset values, allowing `omitzero` to omit them
+- `UnsetNull`: `IsZero()` returns `false`, so unset values are always included as `null`
+
+```go
+type Request struct {
+    Name nullable.Of[string] `json:"name,omitzero"` // omitted when unset (Go 1.24+)
+    Age  nullable.Of[int]    `json:"age"`           // always included
+}
+
+// Package-level default (default: UnsetSkip)
+nullable.SetDefaultMarshalUnset(nullable.UnsetNull)
+
+// Per-value override
+val := nullable.Of[string]{}
+val.SetMarshalUnset(nullable.UnsetNull)
+```
+
+**Note:** The `omitempty` tag does NOT use `IsZero()` and will include `null` values. Use `omitzero` for proper 3-state omission behavior.
+
+**SQL NULL scanning:**
+
+Control how SQL NULL scans:
+
+```go
+// Package-level default (default: ScanNullAsNull)
+nullable.SetDefaultScanNull(nullable.ScanNullAsUnset)
+
+// Per-value override
+val := nullable.Of[string]{}
+val.SetScanNull(nullable.ScanNullAsUnset)
+```
 
 ## Why Use This Library?
 
@@ -336,13 +427,19 @@ value.SetValueP(ptr) // Sets to null
 ### Checking and Accessing Values
 
 ```go
-// Check if null
+// Check state
+if value.IsUnset() {
+    // Handle unset (field was never touched)
+}
 if value.IsNull() {
-    // Handle null
+    // Handle explicit null
+}
+if value.IsSet() {
+    // Field has a value or is explicitly null
 }
 
 // Get value (returns *T)
-if !value.IsNull() {
+if !value.IsNull() && !value.IsUnset() {
     v := value.GetValue()
     fmt.Println(*v)
 }
@@ -362,6 +459,9 @@ value.SetValueP(&str)
 
 // Set to null
 value.SetNull()
+
+// Reset to unset
+value.Unset()
 ```
 
 ### JSON Operations
@@ -413,6 +513,7 @@ go test -run 'TestMarshal|TestUnmarshal|TestNullableEdgeCases' -v
 |---------|-----------|---------------------|--------------------------|
 | Type-safe generics | ✅ | ❌ (separate type per kind) | ❌ (separate type per kind) |
 | Clean JSON output | ✅ `null` | ❌ `{"Valid":false}` | ✅ `null` |
+| 3-state model | ✅ (unset/null/value) | ❌ | ⚠️ Limited |
 | PostgreSQL JSON/JSONB | ✅ | ❌ | ⚠️ Limited |
 | UUID support | ✅ | ❌ | ❌ |
 | Custom types | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer |
@@ -422,55 +523,24 @@ go test -run 'TestMarshal|TestUnmarshal|TestNullableEdgeCases' -v
 
 ### Detailed Comparison with `aarondl/opt`
 
-The [`opt` package](https://github.com/aarondl/opt) is another modern approach to nullable values in Go, but with a fundamentally different philosophy.
+The [`opt` package](https://github.com/aarondl/opt) is another modern approach to nullable values in Go. Both libraries now support the 3-state model.
 
-#### Core Difference: 2-State vs 3-State Model
+#### Shared 3-State Model
 
-**`nullable` (2-state model):**
+Both `nullable` and `opt` support three states: unset, null, and value.
+
 ```go
+// nullable
 type User struct {
-    Name nullable.Of[string]  // Can be: null OR "John"
+    Name nullable.Of[string]  // Can be: unset OR null OR "John"
 }
-// Zero value is null
-// No distinction between "field not provided" and "field set to null"
-```
+// Zero value is unset
+// Distinguishes: not provided vs explicitly null vs actual value
 
-**`opt` (3-state model):**
-```go
+// opt
 import "github.com/aarondl/opt/omitnull"
-
 type User struct {
     Name omitnull.Val[string]  // Can be: unset OR null OR "John"
-}
-// Zero value is unset (omitted)
-// Distinguishes: not provided vs explicitly null vs actual value
-```
-
-#### When the 3-State Model Matters
-
-The distinction between "unset" and "null" is crucial for **partial API updates**:
-
-```json
-// Request 1: Update name, clear age
-{"name": "John", "age": null}
-
-// Request 2: Update name only, don't touch age
-{"name": "John"}
-
-// Request 3: Clear both fields
-{"name": null, "age": null}
-```
-
-**With `nullable`:** Cannot distinguish between Request 1 and Request 2 (both result in `IsNull() == true`)
-
-**With `opt`:** Can distinguish all three scenarios:
-```go
-if req.Name.IsUnset() {
-    // Don't update (Request 2)
-} else if req.Name.IsNull() {
-    // Set to NULL (Request 3)
-} else {
-    // Update with value (Request 1)
 }
 ```
 
@@ -478,15 +548,16 @@ if req.Name.IsUnset() {
 
 | Feature | `nullable` | `opt` |
 |---------|-----------|-------|
-| **State Model** | 2-state (null/value) | 3-state (unset/null/value) |
-| **Zero Value** | `null` | `unset` |
+| **State Model** | 3-state (unset/null/value) | 3-state (unset/null/value) |
+| **Zero Value** | `unset` | `unset` |
 | **Clean JSON** | ✅ | ✅ |
 | **Database Operations** | ✅ | ✅ |
-| **Partial Updates** | ❌ | ✅ |
-| **Distinguish unset vs null** | ❌ | ✅ |
+| **Partial Updates** | ✅ | ✅ |
+| **Distinguish unset vs null** | ✅ | ✅ |
 | **Type Constraints** | ✅ (safer) | ❌ (any type) |
 | **PostgreSQL JSON/JSONB** | ✅ Optimized | ✅ Generic |
 | **UUID Support** | ✅ Built-in | ✅ Any type |
+| **Configurable Behavior** | ✅ Per-value and package-level | ❌ |
 | **Functional Operations** | ❌ | ✅ `Map()`, etc. |
 | **Package Structure** | Single type | 3 sub-packages |
 | **Maturity** | Stable | Pre-1.0 |
@@ -498,6 +569,7 @@ if req.Name.IsUnset() {
 // nullable
 name := nullable.FromValue("John")
 email := nullable.Null[string]()
+unset := nullable.Of[string]{}  // unset state
 
 // opt
 import "github.com/aarondl/opt/omitnull"
@@ -508,9 +580,13 @@ unset := omitnull.Val[string]{}  // unset state
 
 **Checking State:**
 ```go
-// nullable - 2 checks
-if value.IsNull() {
-    // null or zero value
+// nullable - 3 distinct checks
+if value.IsUnset() {
+    // field omitted
+} else if value.IsNull() {
+    // explicitly null
+} else {
+    // has value
 }
 
 // opt - 3 distinct checks
@@ -526,7 +602,7 @@ if value.IsUnset() {
 **Getting Values:**
 ```go
 // nullable
-if !value.IsNull() {
+if !value.IsNull() && !value.IsUnset() {
     v := value.GetValue()  // *T
     fmt.Println(*v)
 }
@@ -538,57 +614,22 @@ v := value.MustGet()           // panics if not set
 ptr := value.Ptr()             // *T or nil
 ```
 
-#### Real-World Example: PATCH Endpoint
-
-```go
-// With opt - perfect for partial updates
-type UpdateUserRequest struct {
-    Name  omitnull.Val[string] `json:"name"`
-    Email omitnull.Val[string] `json:"email"`
-    Age   omitnull.Val[int]    `json:"age"`
-}
-
-func UpdateUser(req UpdateUserRequest) {
-    query := "UPDATE users SET "
-    var updates []string
-    var args []any
-
-    if req.Name.IsValue() {
-        updates = append(updates, "name = ?")
-        args = append(args, req.Name.MustGet())
-    } else if req.Name.IsNull() {
-        updates = append(updates, "name = NULL")
-    }
-    // else: IsUnset() - don't touch this field
-
-    // Same pattern for Email and Age...
-}
-
-// Handles all these requests correctly:
-// {}                              → no updates
-// {"name": "John"}                → update name only
-// {"name": "John", "age": null}   → update name, clear age
-// {"name": null, "age": null}     → clear both
-```
-
 #### When to Choose Each
 
 **Choose `nullable` when:**
-- Building typical CRUD applications
+- Building REST APIs with PATCH endpoints
 - You need clean JSON marshaling for database types
-- Simpler 2-state model (null/value) fits your needs
 - You want type safety with constraints
-- You prefer a simpler API
+- You need configurable marshal/scan behavior
+- Working with PostgreSQL JSON/JSONB types
+- You prefer a simpler, single-type API
 
 **Choose `opt` when:**
-- Building REST APIs with PATCH endpoints
-- You need to distinguish "omitted" from "null"
-- Implementing partial update semantics
-- Working with GraphQL (handles optional/nullable distinction)
 - You need support for any type (not just specific types)
 - You want functional operations like `Map()`
+- Working with GraphQL (handles optional/nullable distinction)
 
-Both packages solve the "clean JSON marshaling" problem well. The key difference is whether you need 2 states (null/value) or 3 states (unset/null/value).
+Both packages solve the 3-state problem well.
 
 ## Similar Projects
 

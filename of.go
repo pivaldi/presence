@@ -10,12 +10,25 @@ import (
 )
 
 type Of[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float64 | JSON] struct {
-	val *T
+	val          *T
+	isSet        bool
+	marshalUnset *MarshalUnsetBehavior
+	scanNull     *ScanNullBehavior
 }
 
-// IsNull returns true iff the value is nil
+// IsNull returns true iff the value is nil and it is set
 func (n *Of[T]) IsNull() bool {
-	return n == nil || n.val == nil
+	return n != nil && n.val == nil && n.isSet
+}
+
+// IsUnset returns true iff it is not set
+func (n *Of[T]) IsUnset() bool {
+	return n == nil || !n.isSet
+}
+
+// IsSet returns true iff it is set
+func (n *Of[T]) IsSet() bool {
+	return n != nil && n.isSet
 }
 
 // GetValue implements the getter.
@@ -36,6 +49,7 @@ func (n *Of[T]) SetValue(b T) {
 		return
 	}
 
+	n.isSet = true
 	n.val = &b
 }
 
@@ -60,16 +74,71 @@ func (n *Of[T]) SetNull() {
 		n = new(Of[T])
 	}
 
+	n.isSet = true
 	n.val = nil
 }
 
+// Unset resets to unset state.
+func (n *Of[T]) Unset() {
+	if n == nil {
+		n = new(Of[T])
+	}
+
+	n.isSet = false
+	n.val = nil
+}
+
+// SetMarshalUnset sets per-value marshal unset behavior.
+func (n *Of[T]) SetMarshalUnset(b MarshalUnsetBehavior) {
+	if n == nil {
+		return
+	}
+	n.marshalUnset = &b
+}
+
+// GetMarshalUnset returns the effective marshal unset behavior.
+func (n *Of[T]) GetMarshalUnset() MarshalUnsetBehavior {
+	if n == nil || n.marshalUnset == nil {
+		return GetDefaultMarshalUnset()
+	}
+	return *n.marshalUnset
+}
+
+// SetScanNull sets per-value scan null behavior.
+func (n *Of[T]) SetScanNull(b ScanNullBehavior) {
+	if n == nil {
+		return
+	}
+	n.scanNull = &b
+}
+
+// GetScanNull returns the effective scan null behavior.
+func (n *Of[T]) GetScanNull() ScanNullBehavior {
+	if n == nil || n.scanNull == nil {
+		return GetDefaultScanNull()
+	}
+	return *n.scanNull
+}
+
 // MarshalJSON implements the encoding json interface.
+// Note: UnsetSkip behavior requires the struct field to have the `omitempty` tag.
+// When marshaling directly (not as a struct field), unset values marshal as null.
 func (n Of[T]) MarshalJSON() ([]byte, error) {
-	if n.IsNull() {
+	if n.IsUnset() || n.IsNull() {
 		return []byte("null"), nil
 	}
 
 	return marshalJSON(&n)
+}
+
+// IsZero implements the interface used by encoding/json's omitempty.
+// Returns true for unset values when UnsetSkip is configured,
+// allowing struct fields with `json:",omitempty"` to be omitted.
+func (n Of[T]) IsZero() bool {
+	if n.IsUnset() && n.GetMarshalUnset() == UnsetSkip {
+		return true
+	}
+	return false
 }
 
 // UnmarshalJSON implements the decoding json interface.
@@ -93,6 +162,7 @@ func (n *Of[T]) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("nullable Unmarshal Error : %w", err)
 	}
 
+	n.isSet = true
 	return nil
 }
 
@@ -138,7 +208,8 @@ func (n *Of[T]) Scan(v any) error {
 		n = new(Of[T])
 	}
 
-	switch any(n.val).(type) {
+	// Use a zero value of T to determine the type, since n.val may be nil
+	switch any(new(T)).(type) {
 	case *string:
 		return n.scanString(v)
 	case *uuid.UUID:

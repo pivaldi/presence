@@ -17,6 +17,10 @@ type JSON = any
 type NullableI[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float64 | JSON] interface {
 	// IsNull returns true if itself is nil or the value is nil/null
 	IsNull() bool
+	// IsUnset returns true if the value has not been set
+	IsUnset() bool
+	// IsSet returns true if the value has been set (null or value)
+	IsSet() bool
 	// GetValue implements the getter.
 	GetValue() *T
 	// SetValue implements the setter.
@@ -25,6 +29,8 @@ type NullableI[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float
 	SetValueP(*T)
 	// SetNull set to null.
 	SetNull()
+	// Unset resets to unset state
+	Unset()
 	// MarshalJSON implements the encoding json interface.
 	MarshalJSON() ([]byte, error)
 	// UnmarshalJSON implements the decoding json interface.
@@ -43,9 +49,11 @@ func FromValue[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float
 	return out
 }
 
-// Null is a Nullable constructor with Null value.
+// Null is a Nullable constructor with explicit Null value.
 func Null[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float64 | JSON]() Of[T] {
-	return Of[T]{}
+	n := Of[T]{}
+	n.SetNull()
+	return n
 }
 
 func (n *Of[T]) scanJSON(v any) error {
@@ -76,7 +84,7 @@ func (n *Of[T]) scanJSON(v any) error {
 
 		n.SetValue(*value)
 	} else {
-		n.SetNull()
+		n.handleScanNull()
 	}
 
 	return nil
@@ -96,7 +104,7 @@ func (n *Of[T]) scanString(v any) error {
 	if null.Valid {
 		n.SetValue(any(null.String).(T))
 	} else {
-		n.SetNull()
+		n.handleScanNull()
 	}
 
 	return nil
@@ -121,7 +129,7 @@ func (n *Of[T]) scanUUID(v any) error {
 
 		n.SetValue(any(uid).(T))
 	} else {
-		n.SetNull()
+		n.handleScanNull()
 	}
 
 	return nil
@@ -139,7 +147,7 @@ func (n *Of[T]) scanInt(v any) error {
 		if null.Valid {
 			n.SetValue(any(null.Int16).(T))
 		} else {
-			n.SetNull()
+			n.handleScanNull()
 		}
 
 		return nil
@@ -153,7 +161,7 @@ func (n *Of[T]) scanInt(v any) error {
 		if null.Valid {
 			n.SetValue(any(null.Int32).(T))
 		} else {
-			n.SetNull()
+			n.handleScanNull()
 		}
 
 		return nil
@@ -167,7 +175,7 @@ func (n *Of[T]) scanInt(v any) error {
 		if null.Valid {
 			n.SetValue(any(int(null.Int64)).(T))
 		} else {
-			n.SetNull()
+			n.handleScanNull()
 		}
 
 		return nil
@@ -181,7 +189,7 @@ func (n *Of[T]) scanInt(v any) error {
 		if null.Valid {
 			n.SetValue(any(null.Int64).(T))
 		} else {
-			n.SetNull()
+			n.handleScanNull()
 		}
 
 		return nil
@@ -200,7 +208,7 @@ func (n *Of[T]) scanFloat(v any) error {
 	if null.Valid {
 		n.SetValue(any(null.Float64).(T))
 	} else {
-		n.SetNull()
+		n.handleScanNull()
 	}
 
 	return nil
@@ -216,7 +224,7 @@ func (n *Of[T]) scanBool(v any) error {
 	if null.Valid {
 		n.SetValue(any(null.Bool).(T))
 	} else {
-		n.SetNull()
+		n.handleScanNull()
 	}
 
 	return nil
@@ -224,7 +232,7 @@ func (n *Of[T]) scanBool(v any) error {
 
 func (n *Of[T]) scanTime(v any) error {
 	if v == nil {
-		n.SetNull()
+		n.handleScanNull()
 
 		return nil
 	}
@@ -250,7 +258,7 @@ func (n *Of[T]) scanTime(v any) error {
 	if null.Valid {
 		n.SetValue(any(null.Time).(T))
 	} else {
-		n.SetNull()
+		n.handleScanNull()
 	}
 
 	return nil
@@ -264,4 +272,13 @@ func marshalJSON[T any](nullable NullableI[T]) ([]byte, error) {
 	}
 
 	return b, nil
+}
+
+// handleScanNull handles null scanning based on configuration.
+func (n *Of[T]) handleScanNull() {
+	if n.GetScanNull() == ScanNullAsUnset {
+		n.Unset()
+	} else {
+		n.SetNull()
+	}
 }

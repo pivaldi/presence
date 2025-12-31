@@ -6,7 +6,29 @@
       "Skill(superpowers:brainstorming)",
       "Bash(ls:*)",
       "Bash(mkdir:*)",
-      "Bash(go get:*)"
+      "Bash(go get:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git clone:*)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(go build:*)",
+      "Bash(go version:*)",
+      "Bash(gofmt:*)",
+      "Bash(GOTOOLCHAIN=local go build:*)",
+      "Bash(go env:*)",
+      "Bash(go list:*)",
+      "Bash(go run:*)",
+      "Bash(/usr/local/go/bin/go version:*)",
+      "Bash(GOTOOLCHAIN=local /usr/local/go/bin/go:*)",
+      "Bash(golangci-lint run:*)",
+      "Bash(GOTOOLCHAIN=local go version:*)",
+      "Bash(GOTOOLCHAIN=local gofmt:*)",
+      "Bash(grep:*)",
+      "Bash(go vet:*)",
+      "Bash(GOTOOLCHAIN=local go vet:*)",
+      "Bash(cat:*)",
+      "Bash(docker:*)",
+      "WebSearch"
     ]
   }
 }
