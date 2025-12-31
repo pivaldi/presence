@@ -381,14 +381,14 @@ err := json.Unmarshal([]byte(`null`), &value)
 
 ## Testing
 
-Run all tests including PostgreSQL integration tests:
+Run all tests including PostgreSQL integration tests using `go test`:
 
 ```bash
 cd tests
 go test -v ./...
 ```
 
-Or from the root:
+Or from the root using `gotestsum`:
 
 ```bash
 make test

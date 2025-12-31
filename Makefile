@@ -6,9 +6,9 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
-test: ## Run all tests (including PostgreSQL integration tests)
-	cd tests && go test -v ./...
+test: tidy ## Run all tests (including PostgreSQL integration tests)
+	cd tests && go tool -modfile=go.tool.mod gotestsum --format testdox -- -v
 
 tidy: ## Tidy Go modules
 	go mod tidy
-	cd tests && go mod tidy
+	cd tests && go mod tidy && go get -modfile=go.tool.mod tool
