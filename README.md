@@ -49,14 +49,17 @@ if !age.IsNull() {
 
 ## Supported Types
 
-The library supports the following types through the `Of[T]` generic wrapper:
+The library uses `Of[T any]` which accepts **any type**. Common usage patterns:
 
-- **Integers**: `int`, `int16`, `int32`, `int64`
-- **Floating point**: `float64`
-- **Boolean**: `bool`
-- **String**: `string`
+- **Primitives**: `int`, `int16`, `int32`, `int64`, `float64`, `bool`, `string`
 - **UUID**: `uuid.UUID` (from `github.com/google/uuid`)
-- **JSON**: `nullable.JSON` (alias for `any`) - for complex types stored as JSON in database
+- **Time**: `time.Time`
+- **Complex types**: structs, slices, maps - stored as JSON in database
+- **Custom types**: any type implementing `sql.Scanner`/`driver.Valuer`
+
+For database operations:
+- Primitive types (`string`, `int*`, `float64`, `bool`, `time.Time`, `uuid.UUID`) are stored directly
+- All other types are automatically marshaled to JSON for storage
 
 ## Three-State Model
 
@@ -295,7 +298,7 @@ func getArticle(db *sql.DB, id int64) (*Article, error) {
 
 ### Working with JSON/JSONB (PostgreSQL)
 
-Store complex Go types as JSON in PostgreSQL:
+Store complex Go types as JSON in PostgreSQL. Simply use the struct type directly - no wrapper needed:
 
 ```go
 type Metadata struct {
@@ -305,9 +308,9 @@ type Metadata struct {
 }
 
 type Document struct {
-    ID       int64                      `db:"id"`
-    Title    nullable.Of[string]        `db:"title"`
-    Metadata nullable.Of[nullable.JSON] `db:"metadata"` // Stored as JSONB
+    ID       int64                   `db:"id"`
+    Title    nullable.Of[string]     `db:"title"`
+    Metadata nullable.Of[Metadata]   `db:"metadata"` // Stored as JSONB
 }
 
 func insertDocument(db *sql.DB) error {
@@ -319,7 +322,7 @@ func insertDocument(db *sql.DB) error {
 
     doc := Document{
         Title:    nullable.FromValue("Go Nullable Guide"),
-        Metadata: nullable.FromValue[nullable.JSON](meta),
+        Metadata: nullable.FromValue(meta),
     }
 
     query := `INSERT INTO documents (title, metadata) VALUES ($1, $2) RETURNING id`
@@ -329,6 +332,8 @@ func insertDocument(db *sql.DB) error {
 
 ### Nested Structures
 
+Use types directly without any wrapper - the library handles them automatically:
+
 ```go
 type Address struct {
     Street  nullable.Of[string] `json:"street"`
@@ -337,25 +342,25 @@ type Address struct {
 }
 
 type Profile struct {
-    Bio     nullable.Of[string]        `json:"bio"`
-    Website nullable.Of[string]        `json:"website"`
-    Address nullable.Of[nullable.JSON] `json:"address"`
+    Bio     nullable.Of[string]  `json:"bio"`
+    Website nullable.Of[string]  `json:"website"`
+    Address nullable.Of[Address] `json:"address"`
 }
 
 type User struct {
-    Username nullable.Of[string]        `json:"username"`
-    Email    nullable.Of[string]        `json:"email"`
-    Profile  nullable.Of[nullable.JSON] `json:"profile"`
+    Username nullable.Of[string]  `json:"username"`
+    Email    nullable.Of[string]  `json:"email"`
+    Profile  nullable.Of[Profile] `json:"profile"`
 }
 
 func main() {
     user := User{
         Username: nullable.FromValue("johndoe"),
         Email:    nullable.FromValue("john@example.com"),
-        Profile: nullable.FromValue[nullable.JSON](Profile{
+        Profile: nullable.FromValue(Profile{
             Bio:     nullable.FromValue("Software Developer"),
             Website: nullable.FromValue("https://johndoe.com"),
-            Address: nullable.FromValue[nullable.JSON](Address{
+            Address: nullable.FromValue(Address{
                 Street:  nullable.FromValue("123 Main St"),
                 City:    nullable.FromValue("New York"),
                 ZipCode: nullable.FromValue("10001"),
@@ -511,7 +516,7 @@ go test -run 'TestMarshal|TestUnmarshal|TestNullableEdgeCases' -v
 
 | Feature | `nullable` | `database/sql.Null*` | `gopkg.in/guregu/null.v4` |
 |---------|-----------|---------------------|--------------------------|
-| Type-safe generics | ✅ | ❌ (separate type per kind) | ❌ (separate type per kind) |
+| Generic (any type) | ✅ `Of[T any]` | ❌ (separate type per kind) | ❌ (separate type per kind) |
 | Clean JSON output | ✅ `null` | ❌ `{"Valid":false}` | ✅ `null` |
 | 3-state model | ✅ (unset/null/value) | ❌ | ⚠️ Limited |
 | PostgreSQL JSON/JSONB | ✅ | ❌ | ⚠️ Limited |
@@ -554,7 +559,7 @@ type User struct {
 | **Database Operations** | ✅ | ✅ |
 | **Partial Updates** | ✅ | ✅ |
 | **Distinguish unset vs null** | ✅ | ✅ |
-| **Type Constraints** | ✅ (safer) | ❌ (any type) |
+| **Type Parameter** | `Of[T any]` | `Val[T any]` |
 | **PostgreSQL JSON/JSONB** | ✅ Optimized | ✅ Generic |
 | **UUID Support** | ✅ Built-in | ✅ Any type |
 | **Configurable Behavior** | ✅ Per-value and package-level | ❌ |
@@ -619,17 +624,16 @@ ptr := value.Ptr()             // *T or nil
 **Choose `nullable` when:**
 - Building REST APIs with PATCH endpoints
 - You need clean JSON marshaling for database types
-- You want type safety with constraints
 - You need configurable marshal/scan behavior
 - Working with PostgreSQL JSON/JSONB types
 - You prefer a simpler, single-type API
 
 **Choose `opt` when:**
-- You need support for any type (not just specific types)
 - You want functional operations like `Map()`
 - Working with GraphQL (handles optional/nullable distinction)
+- You prefer the multi-package structure
 
-Both packages solve the 3-state problem well.
+Both packages solve the 3-state problem well and accept any type.
 
 ## Similar Projects
 

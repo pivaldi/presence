@@ -14,17 +14,18 @@ This is a Go library (`github.com/pivaldi/nullable`) that provides generic nulla
 - `doc.go` - Package documentation
 
 **Key design patterns:**
-1. **Generic nullable wrapper**: `Of[T]` wraps any supported type `T` with an internal pointer `val *T` where `nil` represents NULL
-2. **Type dispatch in Scan/Value**: The `Scan` and `Value` methods use type switches to route to specialized handlers for primitive types vs JSON types
+1. **Generic nullable wrapper**: `Of[T any]` wraps any type `T` with an internal pointer `val *T` where `nil` represents NULL, plus `isSet bool` for 3-state support
+2. **Type dispatch in Scan/Value**: The `Scan` and `Value` methods use type switches to route to specialized handlers for primitive types, with fallback to JSON for all other types
 3. **Custom type support**: Types implementing `sql.Scanner` or `driver.Valuer` interfaces are automatically supported without JSON marshaling
 4. **Dual module structure**: Main module at root, separate test module in `tests/` directory with `replace` directive
+5. **3-state model**: Distinguishes between unset (zero value), null (explicitly set to null), and value (has a concrete value)
 
 ### Supported Types
 
-The library constrains type parameter `T` to: `bool | int | int16 | int32 | int64 | string | uuid.UUID | float64 | JSON`
+The library uses `Of[T any]` which accepts **any type**. For database operations:
 
-- **Primitive types** are stored directly in the database
-- **JSON type** (alias for `any`) is marshaled to JSON for database storage unless the type implements custom `sql.Scanner`/`driver.Valuer`
+- **Primitive types** (`string`, `int`, `int16`, `int32`, `int64`, `float64`, `bool`, `time.Time`, `uuid.UUID`) are stored directly in the database
+- **All other types** (structs, slices, maps, etc.) are automatically marshaled to JSON for database storage
 - Custom types can implement `sql.Scanner` and `driver.Valuer` to control their own serialization (see README.md example with `PhoneNumber`)
 
 ## Development Commands
@@ -89,28 +90,35 @@ The test suite is located in `tests/` directory with its own `go.mod` that uses 
 
 The `Of[T]` type implements custom JSON marshaling:
 
-**MarshalJSON (of.go:67-73):**
-- Returns `[]byte("null")` if value is null
-- Otherwise delegates to generic `marshalJSON` helper (nullable.go:260-267)
+**MarshalJSON (of.go:126-137):**
+- Returns `[]byte("null")` if value is unset or null
+- Otherwise calls `json.Marshal(n.GetValue())` to marshal the value directly
 
-**UnmarshalJSON (of.go:76-97):**
+**UnmarshalJSON (of.go:150-172):**
 - Handles `null` JSON values by calling `SetNull()`
 - For non-null values, unmarshals directly into the wrapped value
 - Allocates new `T` if needed before unmarshaling
+- Sets `isSet = true` after successful unmarshal
 
-**Key invariant:** JSON `null` maps to Go `nil` pointer, not a special Valid/Invalid flag like `database/sql` types.
+**IsZero (of.go:142-147):**
+- Returns `true` for unset values when `UnsetSkip` is configured
+- Used by Go 1.24+ `omitzero` struct tag to omit unset fields from JSON output
+
+**Key invariant:** JSON `null` maps to `isSet=true, val=nil`, while missing/unset is `isSet=false, val=nil`.
 
 ## Database Integration
 
 The library integrates with `database/sql` through two interfaces:
 
-1. **`driver.Valuer` (of.go:100-132)**: Converts Go values to database values
-   - Primitive types return their dereferenced value
-   - JSON types check for custom `driver.Valuer` first, then marshal to JSON string
+1. **`driver.Valuer` (of.go:175-207)**: Converts Go values to database values
+   - Primitive types (`string`, `int*`, `float64`, `bool`, `time.Time`, `uuid.UUID`) return their dereferenced value directly
+   - Other types check for custom `driver.Valuer` first, then marshal to JSON string
 
-2. **`sql.Scanner` (of.go:136-159)**: Converts database values to Go values
-   - Routes to type-specific scan methods based on the wrapped type
-   - Each scan method (in nullable.go) handles SQL NULL properly
+2. **`sql.Scanner` (of.go:211-233)**: Converts database values to Go values
+   - Routes to type-specific scan methods based on the wrapped type using type switch
+   - Primitive types use optimized scanning (e.g., `scanString`, `scanInt`, `scanBool`)
+   - All other types fall back to `scanJSON` which unmarshals from JSON
+   - Each scan method (in nullable.go) handles SQL NULL properly via `handleScanNull()`
 
 ## Go Version and Dependencies
 
@@ -125,6 +133,8 @@ The library integrates with `database/sql` through two interfaces:
 
 2. **Test execution**: Integration tests require Docker to be running (testcontainers uses it). Run `cd tests && go test -v ./...` or `make test` for the full suite.
 
-3. **Type constraints**: The generic constraint limits supported types. Adding new primitive types requires updating the constraint in both `NullableI` interface and `Of[T]` struct definition.
+3. **Type handling in Scan/Value**: The library uses type switches in `Scan()` and `Value()` methods to handle primitive types directly. All other types fall back to JSON marshaling/unmarshaling. To add optimized handling for a new primitive type, update the type switch in both methods.
 
 4. **Time precision**: PostgreSQL tests truncate time to seconds (`Truncate(time.Second)`) to match database precision.
+
+5. **3-state assertions in tests**: When testing nullable fields in structs, use `.IsNull()` and `.GetValue()` methods instead of checking struct fields directly (e.g., `assert.True(t, field.IsNull())` not `assert.Nil(t, field)`).

@@ -17,17 +17,17 @@ import (
 
 // TypeTest represents all supported nullable types
 type TypeTest struct {
-	ID        int64                      `db:"id"`
-	StringVal nullable.Of[string]        `db:"string_val"`
-	IntVal    nullable.Of[int]           `db:"int_val"`
-	Int16Val  nullable.Of[int16]         `db:"int16_val"`
-	Int32Val  nullable.Of[int32]         `db:"int32_val"`
-	Int64Val  nullable.Of[int64]         `db:"int64_val"`
-	FloatVal  nullable.Of[float64]       `db:"float_val"`
-	BoolVal   nullable.Of[bool]          `db:"bool_val"`
-	UUIDVal   nullable.Of[uuid.UUID]     `db:"uuid_val"`
-	TimeVal   nullable.Of[time.Time]     `db:"time_val"`
-	JSONVal   nullable.Of[nullable.JSON] `db:"json_val"`
+	ID        int64                  `db:"id"`
+	StringVal nullable.Of[string]    `db:"string_val"`
+	IntVal    nullable.Of[int]       `db:"int_val"`
+	Int16Val  nullable.Of[int16]     `db:"int16_val"`
+	Int32Val  nullable.Of[int32]     `db:"int32_val"`
+	Int64Val  nullable.Of[int64]     `db:"int64_val"`
+	FloatVal  nullable.Of[float64]   `db:"float_val"`
+	BoolVal   nullable.Of[bool]      `db:"bool_val"`
+	UUIDVal   nullable.Of[uuid.UUID] `db:"uuid_val"`
+	TimeVal   nullable.Of[time.Time] `db:"time_val"`
+	JSONVal   nullable.Of[any]       `db:"json_val"`
 }
 
 func TestAllTypes(t *testing.T) {
@@ -47,7 +47,7 @@ func TestAllTypes(t *testing.T) {
 		BoolVal:   nullable.FromValue(true),
 		UUIDVal:   nullable.FromValue(testUUID),
 		TimeVal:   nullable.FromValue(testTime),
-		JSONVal:   nullable.FromValue[nullable.JSON](map[string]any{"key": "value"}),
+		JSONVal:   nullable.FromValue[any](map[string]any{"key": "value"}),
 	}
 
 	// Insert
@@ -192,7 +192,7 @@ func TestNullValues(t *testing.T) {
 	})
 
 	// Read back
-	var readTest testedStruct[nullable.JSON]
+	var readTest testedStruct[any]
 
 	t.Run("Reading and scanning", func(t *testing.T) {
 		err := db.QueryRow(

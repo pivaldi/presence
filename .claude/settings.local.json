@@ -28,7 +28,8 @@
       "Bash(GOTOOLCHAIN=local go vet:*)",
       "Bash(cat:*)",
       "Bash(docker:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(/usr/local/go/bin/go build ./...)"
     ]
   }
 }

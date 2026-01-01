@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Of[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float64 | JSON] struct {
+type Of[T any] struct {
 	val          *T
 	isSet        bool
 	marshalUnset *MarshalUnsetBehavior
@@ -101,6 +101,7 @@ func (n *Of[T]) GetMarshalUnset() MarshalUnsetBehavior {
 	if n == nil || n.marshalUnset == nil {
 		return GetDefaultMarshalUnset()
 	}
+
 	return *n.marshalUnset
 }
 
@@ -117,6 +118,7 @@ func (n *Of[T]) GetScanNull() ScanNullBehavior {
 	if n == nil || n.scanNull == nil {
 		return GetDefaultScanNull()
 	}
+
 	return *n.scanNull
 }
 
@@ -128,7 +130,12 @@ func (n Of[T]) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 
-	return marshalJSON(&n)
+	b, err := json.Marshal(n.GetValue())
+	if err != nil {
+		return nil, fmt.Errorf("nullable json marshaling %T : %w", n, err)
+	}
+
+	return b, nil
 }
 
 // IsZero implements the interface used by encoding/json's omitempty.
@@ -138,6 +145,7 @@ func (n Of[T]) IsZero() bool {
 	if n.IsUnset() && n.GetMarshalUnset() == UnsetSkip {
 		return true
 	}
+
 	return false
 }
 
@@ -153,7 +161,7 @@ func (n *Of[T]) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	if n.val == nil {
+	if n.val == nil && string(data) != "undefined" {
 		n.val = new(T)
 	}
 
@@ -163,6 +171,7 @@ func (n *Of[T]) UnmarshalJSON(data []byte) error {
 	}
 
 	n.isSet = true
+
 	return nil
 }
 
@@ -176,7 +185,7 @@ func (n Of[T]) Value() (driver.Value, error) {
 	case *string, *int16, *int32, *int, *int64, *float64, *bool, *time.Time, *uuid.UUID, string,
 		int16, int32, int, int64, float64, bool, time.Time, uuid.UUID:
 		return *n.val, nil
-	case JSON:
+	case any:
 		if value == nil {
 			return nil, nil
 		}
@@ -222,9 +231,7 @@ func (n *Of[T]) Scan(v any) error {
 		return n.scanBool(v)
 	case *time.Time:
 		return n.scanTime(v)
-	case *JSON, JSON:
-		return n.scanJSON(v)
 	}
 
-	return fmt.Errorf("type %T is not handled as nullable", v)
+	return n.scanJSON(v)
 }

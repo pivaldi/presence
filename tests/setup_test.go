@@ -28,15 +28,15 @@ var (
 )
 
 type embeddedStruct struct {
-	ID     int64                      `json:"id" db:"id"`
-	String string                     `json:"string" db:"string"`
-	Int    int                        `json:"int" db:"int"`
-	Bool   nullable.Of[bool]          `json:"bool" db:"bool"`
-	DateTo nullable.Of[time.Time]     `json:"dateTo" db:"date_to"`
-	JSON   nullable.Of[nullable.JSON] `json:"json" db:"json"`
+	ID     int64                  `json:"id" db:"id"`
+	String string                 `json:"string" db:"string"`
+	Int    int                    `json:"int" db:"int"`
+	Bool   nullable.Of[bool]      `json:"bool" db:"bool"`
+	DateTo nullable.Of[time.Time] `json:"dateTo" db:"date_to"`
+	JSON   nullable.Of[any]       `json:"json" db:"json"`
 }
 
-type testedStruct[T nullable.JSON] struct {
+type testedStruct[T any] struct {
 	ID     int64                  `json:"id" db:"id"`
 	Name   nullable.Of[string]    `json:"name" db:"name"`
 	DateTo nullable.Of[time.Time] `json:"dateTo" db:"date_to"`
@@ -130,12 +130,12 @@ func getEmbeddedObj() embeddedStruct {
 		DateTo: nullable.FromValue(now),
 	}
 
-	obj.JSON = nullable.FromValue[nullable.JSON](obj)
+	obj.JSON = nullable.FromValue[any](obj)
 
 	return obj
 }
 
-func getNullTestObj[T nullable.JSON]() testedStruct[T] {
+func getNullTestObj[T any]() testedStruct[T] {
 	return testedStruct[T]{
 		ID:     1,
 		Name:   nullable.Null[string](),    // Null value
@@ -144,7 +144,7 @@ func getNullTestObj[T nullable.JSON]() testedStruct[T] {
 	}
 }
 
-func getTestObjs[T nullable.JSON](data T) []testedStruct[T] {
+func getTestObjs[T any](data T) []testedStruct[T] {
 	obj1 := testedStruct[T]{
 		Name:   nullable.FromValue(name),
 		DateTo: nullable.FromValue(now),

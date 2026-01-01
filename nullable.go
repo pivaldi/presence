@@ -11,10 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// JSON permits to handle Postgresl Json[b] type
-type JSON = any
-
-type NullableI[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float64 | JSON] interface {
+type NullableI[T any] interface {
 	// IsNull returns true if itself is nil or the value is nil/null
 	IsNull() bool
 	// IsUnset returns true if the value has not been set
@@ -42,7 +39,7 @@ type NullableI[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float
 }
 
 // FromValue is a Nullable constructor from the given value thanks to Go generics' inference.
-func FromValue[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float64 | JSON](b T) Of[T] {
+func FromValue[T any](b T) Of[T] {
 	out := Of[T]{}
 	out.SetValue(b)
 
@@ -50,9 +47,10 @@ func FromValue[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float
 }
 
 // Null is a Nullable constructor with explicit Null value.
-func Null[T bool | int | int16 | int32 | int64 | string | uuid.UUID | float64 | JSON]() Of[T] {
+func Null[T any]() Of[T] {
 	n := Of[T]{}
 	n.SetNull()
+
 	return n
 }
 
@@ -262,16 +260,6 @@ func (n *Of[T]) scanTime(v any) error {
 	}
 
 	return nil
-}
-
-// marshalJSON implements the generic encoding json interface.
-func marshalJSON[T any](nullable NullableI[T]) ([]byte, error) {
-	b, err := json.Marshal(nullable.GetValue())
-	if err != nil {
-		return nil, fmt.Errorf("nullable json marshaling %T : %w", nullable, err)
-	}
-
-	return b, nil
 }
 
 // handleScanNull handles null scanning based on configuration.

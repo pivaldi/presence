@@ -185,7 +185,7 @@ func TestMarshalJSON_UUID(t *testing.T) {
 func TestMarshalJSON_JSONType(t *testing.T) {
 	t.Run("simple map", func(t *testing.T) {
 		obj := map[string]any{"key": "value", "number": 42}
-		n := nullable.FromValue[nullable.JSON](obj)
+		n := nullable.FromValue(obj)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		// Can't assert exact JSON due to map ordering, so unmarshal and compare
@@ -202,7 +202,7 @@ func TestMarshalJSON_JSONType(t *testing.T) {
 				"inner": "value",
 			},
 		}
-		n := nullable.FromValue[nullable.JSON](obj)
+		n := nullable.FromValue(obj)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		var result map[string]any
@@ -214,7 +214,7 @@ func TestMarshalJSON_JSONType(t *testing.T) {
 
 	t.Run("array", func(t *testing.T) {
 		obj := []any{1, 2, 3, "four"}
-		n := nullable.FromValue[nullable.JSON](obj)
+		n := nullable.FromValue(obj)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.JSONEq(t, `[1,2,3,"four"]`, string(data))
@@ -440,7 +440,7 @@ func TestUnmarshalJSON_InvalidJSON(t *testing.T) {
 
 func TestUnmarshalJSON_JSONType(t *testing.T) {
 	t.Run("simple map", func(t *testing.T) {
-		var n nullable.Of[nullable.JSON]
+		var n nullable.Of[any]
 		err := n.UnmarshalJSON([]byte(`{"key":"value","number":42}`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -450,7 +450,7 @@ func TestUnmarshalJSON_JSONType(t *testing.T) {
 	})
 
 	t.Run("nested structure", func(t *testing.T) {
-		var n nullable.Of[nullable.JSON]
+		var n nullable.Of[any]
 		err := n.UnmarshalJSON([]byte(`{"nested":{"inner":"value"}}`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -460,7 +460,7 @@ func TestUnmarshalJSON_JSONType(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
-		var n nullable.Of[nullable.JSON]
+		var n nullable.Of[any]
 		err := n.UnmarshalJSON([]byte(`[1,2,3,"four"]`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -540,11 +540,11 @@ func TestMarshalUnmarshal_RoundTrip(t *testing.T) {
 
 	t.Run("JSON type round trip", func(t *testing.T) {
 		obj := map[string]any{"key": "value", "number": float64(42)}
-		original := nullable.FromValue[nullable.JSON](obj)
+		original := nullable.FromValue(obj)
 		data, err := original.MarshalJSON()
 		require.NoError(t, err)
 
-		var restored nullable.Of[nullable.JSON]
+		var restored nullable.Of[any]
 		err = restored.UnmarshalJSON(data)
 		require.NoError(t, err)
 		result := (*restored.GetValue()).(map[string]any)
@@ -663,46 +663,46 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 	}
 
 	type ContactInfo struct {
-		Email       nullable.Of[string]        `json:"email"`
-		Phone       nullable.Of[string]        `json:"phone"`
-		Address     nullable.Of[nullable.JSON] `json:"address"`
-		IsPrimary   nullable.Of[bool]          `json:"isPrimary"`
-		LastUpdated nullable.Of[int64]         `json:"lastUpdated"`
+		Email       nullable.Of[string]  `json:"email"`
+		Phone       nullable.Of[string]  `json:"phone"`
+		Address     nullable.Of[Address] `json:"address"`
+		IsPrimary   nullable.Of[bool]    `json:"isPrimary"`
+		LastUpdated nullable.Of[int64]   `json:"lastUpdated"`
 	}
 
 	type Metadata struct {
-		Tags        nullable.Of[nullable.JSON] `json:"tags"`
-		Properties  nullable.Of[nullable.JSON] `json:"properties"`
-		Version     nullable.Of[int]           `json:"version"`
-		IsActive    nullable.Of[bool]          `json:"isActive"`
-		CreatedBy   nullable.Of[string]        `json:"createdBy"`
-		CreatedByID nullable.Of[uuid.UUID]     `json:"createdById"`
+		Tags        nullable.Of[[]string]          `json:"tags"`
+		Properties  nullable.Of[map[string]string] `json:"properties"`
+		Version     nullable.Of[int]               `json:"version"`
+		IsActive    nullable.Of[bool]              `json:"isActive"`
+		CreatedBy   nullable.Of[string]            `json:"createdBy"`
+		CreatedByID nullable.Of[uuid.UUID]         `json:"createdById"`
 	}
 
 	type Profile struct {
-		Bio         nullable.Of[string]        `json:"bio"`
-		Website     nullable.Of[string]        `json:"website"`
-		AvatarURL   nullable.Of[string]        `json:"avatarUrl"`
-		Contacts    nullable.Of[nullable.JSON] `json:"contacts"`
-		Preferences nullable.Of[nullable.JSON] `json:"preferences"`
-		Metadata    nullable.Of[nullable.JSON] `json:"metadata"`
-		Score       nullable.Of[float64]       `json:"score"`
-		Level       nullable.Of[int32]         `json:"level"`
+		Bio         nullable.Of[string]         `json:"bio"`
+		Website     nullable.Of[string]         `json:"website"`
+		AvatarURL   nullable.Of[string]         `json:"avatarUrl"`
+		Contacts    nullable.Of[[]ContactInfo]  `json:"contacts"`
+		Preferences nullable.Of[map[string]any] `json:"preferences"`
+		Metadata    nullable.Of[Metadata]       `json:"metadata"`
+		Score       nullable.Of[float64]        `json:"score"`
+		Level       nullable.Of[int32]          `json:"level"`
 	}
 
 	type User struct {
-		ID          nullable.Of[uuid.UUID]     `json:"id"`
-		Username    nullable.Of[string]        `json:"username"`
-		Email       nullable.Of[string]        `json:"email"`
-		FirstName   nullable.Of[string]        `json:"firstName"`
-		LastName    nullable.Of[string]        `json:"lastName"`
-		Age         nullable.Of[int]           `json:"age"`
-		IsActive    nullable.Of[bool]          `json:"isActive"`
-		Balance     nullable.Of[float64]       `json:"balance"`
-		Profile     nullable.Of[nullable.JSON] `json:"profile"`
-		Roles       nullable.Of[nullable.JSON] `json:"roles"`
-		Permissions nullable.Of[nullable.JSON] `json:"permissions"`
-		CreatedAt   nullable.Of[int64]         `json:"createdAt"`
+		ID          nullable.Of[uuid.UUID]       `json:"id"`
+		Username    nullable.Of[string]          `json:"username"`
+		Email       nullable.Of[string]          `json:"email"`
+		FirstName   nullable.Of[string]          `json:"firstName"`
+		LastName    nullable.Of[string]          `json:"lastName"`
+		Age         nullable.Of[int]             `json:"age"`
+		IsActive    nullable.Of[bool]            `json:"isActive"`
+		Balance     nullable.Of[float64]         `json:"balance"`
+		Profile     nullable.Of[Profile]         `json:"profile"`
+		Roles       nullable.Of[[]string]        `json:"roles"`
+		Permissions nullable.Of[map[string]bool] `json:"permissions"`
+		CreatedAt   nullable.Of[int64]           `json:"createdAt"`
 	}
 
 	t.Run("deeply nested structure with all values", func(t *testing.T) {
@@ -720,14 +720,14 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		contact := ContactInfo{
 			Email:       nullable.FromValue("user@example.com"),
 			Phone:       nullable.FromValue("+1-555-0100"),
-			Address:     nullable.FromValue[nullable.JSON](address),
+			Address:     nullable.FromValue[Address](address),
 			IsPrimary:   nullable.FromValue(true),
 			LastUpdated: nullable.FromValue(int64(1234567890)),
 		}
 
 		metadata := Metadata{
-			Tags:        nullable.FromValue[nullable.JSON]([]string{"premium", "verified"}),
-			Properties:  nullable.FromValue[nullable.JSON](map[string]any{"theme": "dark", "language": "en"}),
+			Tags:        nullable.FromValue([]string{"premium", "verified"}),
+			Properties:  nullable.FromValue(map[string]string{"theme": "dark", "language": "en"}),
 			Version:     nullable.FromValue(3),
 			IsActive:    nullable.FromValue(true),
 			CreatedBy:   nullable.FromValue("admin"),
@@ -738,9 +738,9 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 			Bio:         nullable.FromValue("Software developer"),
 			Website:     nullable.FromValue("https://example.com"),
 			AvatarURL:   nullable.FromValue("https://example.com/avatar.jpg"),
-			Contacts:    nullable.FromValue[nullable.JSON]([]ContactInfo{contact}),
-			Preferences: nullable.FromValue[nullable.JSON](map[string]any{"notifications": true, "theme": "dark"}),
-			Metadata:    nullable.FromValue[nullable.JSON](metadata),
+			Contacts:    nullable.FromValue([]ContactInfo{contact}),
+			Preferences: nullable.FromValue(map[string]any{"notifications": true, "theme": "dark"}),
+			Metadata:    nullable.FromValue[Metadata](metadata),
 			Score:       nullable.FromValue(98.5),
 			Level:       nullable.FromValue(int32(42)),
 		}
@@ -754,9 +754,9 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 			Age:         nullable.FromValue(30),
 			IsActive:    nullable.FromValue(true),
 			Balance:     nullable.FromValue(1234.56),
-			Profile:     nullable.FromValue[nullable.JSON](profile),
-			Roles:       nullable.FromValue[nullable.JSON]([]string{"admin", "user"}),
-			Permissions: nullable.FromValue[nullable.JSON](map[string]bool{"read": true, "write": true, "delete": false}),
+			Profile:     nullable.FromValue(profile),
+			Roles:       nullable.FromValue([]string{"admin", "user"}),
+			Permissions: nullable.FromValue(map[string]bool{"read": true, "write": true, "delete": false}),
 			CreatedAt:   nullable.FromValue(int64(1609459200)),
 		}
 
@@ -778,33 +778,33 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		assert.Equal(t, *user.Balance.GetValue(), *restored.Balance.GetValue())
 
 		// Verify roles (array)
-		roles := (*restored.Roles.GetValue()).([]any)
+		roles := *restored.Roles.GetValue()
 		assert.Len(t, roles, 2)
 		assert.Equal(t, "admin", roles[0])
 		assert.Equal(t, "user", roles[1])
 
 		// Verify permissions (map)
-		permissions := (*restored.Permissions.GetValue()).(map[string]any)
+		permissions := *restored.Permissions.GetValue()
 		assert.Equal(t, true, permissions["read"])
 		assert.Equal(t, true, permissions["write"])
 		assert.Equal(t, false, permissions["delete"])
 
 		// Verify nested profile
-		profileData := (*restored.Profile.GetValue()).(map[string]any)
-		assert.Equal(t, "Software developer", profileData["bio"])
-		assert.Equal(t, "https://example.com", profileData["website"])
-		assert.Equal(t, float64(98.5), profileData["score"])
-		assert.Equal(t, float64(42), profileData["level"])
+		profileData := restored.Profile.GetValue()
+		assert.Equal(t, "Software developer", *profileData.Bio.GetValue())
+		assert.Equal(t, "https://example.com", *profileData.Website.GetValue())
+		assert.Equal(t, 98.5, *profileData.Score.GetValue())
+		assert.Equal(t, int32(42), *profileData.Level.GetValue())
 
 		// Verify deeply nested metadata
-		metadataData := profileData["metadata"].(map[string]any)
-		assert.Equal(t, float64(3), metadataData["version"])
-		assert.Equal(t, true, metadataData["isActive"])
-		assert.Equal(t, "admin", metadataData["createdBy"])
-		assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", metadataData["createdById"])
+		metadataData := *profileData.Metadata.GetValue()
+		assert.Equal(t, 3, *metadataData.Version.GetValue())
+		assert.Equal(t, true, *metadataData.IsActive.GetValue())
+		assert.Equal(t, "admin", *metadataData.CreatedBy.GetValue())
+		assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", metadataData.CreatedByID.GetValue().String())
 
 		// Verify deeply nested tags
-		tags := metadataData["tags"].([]any)
+		tags := *metadataData.Tags.GetValue()
 		assert.Len(t, tags, 2)
 		assert.Equal(t, "premium", tags[0])
 		assert.Equal(t, "verified", tags[1])
@@ -814,15 +814,15 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		// Create structure with some null values at different levels
 		contact := ContactInfo{
 			Email:       nullable.FromValue("contact@example.com"),
-			Phone:       nullable.Null[string](),        // Null phone
-			Address:     nullable.Null[nullable.JSON](), // Null address
+			Phone:       nullable.Null[string](),  // Null phone
+			Address:     nullable.Null[Address](), // Null address
 			IsPrimary:   nullable.FromValue(false),
 			LastUpdated: nullable.FromValue(int64(9876543210)),
 		}
 
 		metadata := Metadata{
-			Tags:        nullable.FromValue[nullable.JSON]([]string{"new"}),
-			Properties:  nullable.Null[nullable.JSON](), // Null properties
+			Tags:        nullable.FromValue([]string{"new"}),
+			Properties:  nullable.Null[map[string]string](), // Null properties
 			Version:     nullable.FromValue(1),
 			IsActive:    nullable.Null[bool](), // Null isActive
 			CreatedBy:   nullable.FromValue("system"),
@@ -833,9 +833,9 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 			Bio:         nullable.Null[string](), // Null bio
 			Website:     nullable.FromValue("https://site.com"),
 			AvatarURL:   nullable.Null[string](), // Null avatar
-			Contacts:    nullable.FromValue[nullable.JSON]([]ContactInfo{contact}),
-			Preferences: nullable.Null[nullable.JSON](), // Null preferences
-			Metadata:    nullable.FromValue[nullable.JSON](metadata),
+			Contacts:    nullable.FromValue([]ContactInfo{contact}),
+			Preferences: nullable.Null[map[string]any](), // Null preferences
+			Metadata:    nullable.FromValue(metadata),
 			Score:       nullable.FromValue(75.0),
 			Level:       nullable.Null[int32](), // Null level
 		}
@@ -849,9 +849,9 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 			Age:         nullable.FromValue(25),
 			IsActive:    nullable.FromValue(true),
 			Balance:     nullable.Null[float64](), // Null balance
-			Profile:     nullable.FromValue[nullable.JSON](profile),
-			Roles:       nullable.Null[nullable.JSON](), // Null roles
-			Permissions: nullable.FromValue[nullable.JSON](map[string]bool{"read": true}),
+			Profile:     nullable.FromValue(profile),
+			Roles:       nullable.Null[[]string](), // Null roles
+			Permissions: nullable.FromValue(map[string]bool{"read": true}),
 			CreatedAt:   nullable.FromValue(int64(1609459200)),
 		}
 
@@ -877,20 +877,20 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		assert.Equal(t, *user.Age.GetValue(), *restored.Age.GetValue())
 
 		// Verify nested profile with nulls
-		profileData := (*restored.Profile.GetValue()).(map[string]any)
-		assert.Nil(t, profileData["bio"])
-		assert.Equal(t, "https://site.com", profileData["website"])
-		assert.Nil(t, profileData["avatarUrl"])
-		assert.Nil(t, profileData["preferences"])
-		assert.Equal(t, float64(75.0), profileData["score"])
-		assert.Nil(t, profileData["level"])
+		profileData := *restored.Profile.GetValue()
+		assert.True(t, profileData.Bio.IsNull())
+		assert.Equal(t, "https://site.com", *profileData.Website.GetValue())
+		assert.True(t, profileData.AvatarURL.IsNull())
+		assert.True(t, profileData.Preferences.IsNull())
+		assert.Equal(t, 75.0, *profileData.Score.GetValue())
+		assert.True(t, profileData.Level.IsNull())
 
 		// Verify deeply nested metadata with nulls
-		metadataData := profileData["metadata"].(map[string]any)
-		assert.Equal(t, float64(1), metadataData["version"])
-		assert.Nil(t, metadataData["isActive"])
-		assert.Nil(t, metadataData["properties"])
-		assert.Nil(t, metadataData["createdById"])
+		metadataData := *profileData.Metadata.GetValue()
+		assert.Equal(t, 1, *metadataData.Version.GetValue())
+		assert.True(t, metadataData.IsActive.IsNull())
+		assert.True(t, metadataData.Properties.IsNull())
+		assert.True(t, metadataData.CreatedByID.IsNull())
 	})
 
 	t.Run("deeply nested structure with all null values", func(t *testing.T) {
@@ -903,9 +903,9 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 			Age:         nullable.Null[int](),
 			IsActive:    nullable.Null[bool](),
 			Balance:     nullable.Null[float64](),
-			Profile:     nullable.Null[nullable.JSON](),
-			Roles:       nullable.Null[nullable.JSON](),
-			Permissions: nullable.Null[nullable.JSON](),
+			Profile:     nullable.Null[Profile](),
+			Roles:       nullable.Null[[]string](),
+			Permissions: nullable.Null[map[string]bool](),
 			CreatedAt:   nullable.Null[int64](),
 		}
 
@@ -997,17 +997,17 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 	})
 
 	t.Run("map with complex nullable values", func(t *testing.T) {
-		data := map[string]nullable.Of[nullable.JSON]{
-			"user1": nullable.FromValue[nullable.JSON](map[string]any{
+		data := map[string]nullable.Of[any]{
+			"user1": nullable.FromValue[any](map[string]any{
 				"name":   "Alice",
 				"age":    30,
 				"active": true,
 			}),
-			"user2": nullable.FromValue[nullable.JSON](map[string]any{
+			"user2": nullable.FromValue[any](map[string]any{
 				"name": "Bob",
 				"age":  25,
 			}),
-			"user3": nullable.Null[nullable.JSON](),
+			"user3": nullable.Null[any](),
 		}
 
 		// Marshal
@@ -1016,7 +1016,7 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		require.NotEmpty(t, jsonData)
 
 		// Unmarshal
-		var restored map[string]nullable.Of[nullable.JSON]
+		var restored map[string]nullable.Of[any]
 		err = json.Unmarshal(jsonData, &restored)
 		require.NoError(t, err)
 
@@ -1074,7 +1074,7 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		}
 
 		// Level 1 (top)
-		level1 := nullable.FromValue[nullable.JSON](map[string]any{
+		level1 := nullable.FromValue[any](map[string]any{
 			"root":  level2,
 			"level": 1,
 			"name":  "top level",
@@ -1086,7 +1086,7 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		require.NotEmpty(t, data)
 
 		// Unmarshal
-		var restored nullable.Of[nullable.JSON]
+		var restored nullable.Of[any]
 		err = json.Unmarshal(data, &restored)
 		require.NoError(t, err)
 

@@ -39,6 +39,7 @@ func SetDefaultMarshalUnset(b MarshalUnsetBehavior) {
 func GetDefaultMarshalUnset() MarshalUnsetBehavior {
 	configMu.RLock()
 	defer configMu.RUnlock()
+
 	return defaultMarshalUnset
 }
 
@@ -53,5 +54,6 @@ func SetDefaultScanNull(b ScanNullBehavior) {
 func GetDefaultScanNull() ScanNullBehavior {
 	configMu.RLock()
 	defer configMu.RUnlock()
+
 	return defaultScanNull
 }

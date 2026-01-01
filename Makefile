@@ -1,4 +1,4 @@
-.PHONY: help test tidy
+.PHONY: help test tidy lint
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -12,3 +12,9 @@ test: tidy ## Run all tests (including PostgreSQL integration tests)
 tidy: ## Tidy Go modules
 	go mod tidy
 	cd tests && go mod tidy && go get -modfile=go.tool.mod tool
+
+lint:
+	golangci-lint run
+
+lint-fix:
+	golangci-lint run --fix

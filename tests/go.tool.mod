@@ -1,6 +1,6 @@
 module github.com/pivaldi/nullable/tests
 
-go 1.25.1
+go 1.24.0
 
 tool gotest.tools/gotestsum
 
