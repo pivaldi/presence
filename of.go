@@ -1,6 +1,7 @@
 package nullable
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
@@ -231,6 +232,14 @@ func (n *Of[T]) Scan(v any) error {
 		return n.scanBool(v)
 	case *time.Time:
 		return n.scanTime(v)
+	}
+
+	if scaner, ok := v.(sql.Scanner); ok {
+		if err := scaner.Scan(v); err != nil {
+			return fmt.Errorf("custom sql scaner error on nullable : %w", err)
+		}
+
+		return nil
 	}
 
 	return n.scanJSON(v)

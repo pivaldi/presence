@@ -58,8 +58,9 @@ The library uses `Of[T any]` which accepts **any type**. Common usage patterns:
 - **Custom types**: any type implementing `sql.Scanner`/`driver.Valuer`
 
 For database operations:
-- Primitive types (`string`, `int*`, `float64`, `bool`, `time.Time`, `uuid.UUID`) are stored directly
-- All other types are automatically marshaled to JSON for storage
+- Primitive types (`string`, `int*`, `float64`, `bool`, `time.Time`, `uuid.UUID`) are stored/scanned directly
+- Custom types implementing `sql.Scanner` and/or `driver.Valuer` use their custom serialization
+- All other types are automatically marshaled to/from JSON for storage
 
 ## Three-State Model
 

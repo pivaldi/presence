@@ -24,9 +24,9 @@ This is a Go library (`github.com/pivaldi/nullable`) that provides generic nulla
 
 The library uses `Of[T any]` which accepts **any type**. For database operations:
 
-- **Primitive types** (`string`, `int`, `int16`, `int32`, `int64`, `float64`, `bool`, `time.Time`, `uuid.UUID`) are stored directly in the database
-- **All other types** (structs, slices, maps, etc.) are automatically marshaled to JSON for database storage
-- Custom types can implement `sql.Scanner` and `driver.Valuer` to control their own serialization (see README.md example with `PhoneNumber`)
+- **Primitive types** (`string`, `int`, `int16`, `int32`, `int64`, `float64`, `bool`, `time.Time`, `uuid.UUID`) are stored/scanned directly
+- **Custom types** implementing `sql.Scanner` and/or `driver.Valuer` use their custom serialization (see README.md example with `PhoneNumber`)
+- **All other types** (structs, slices, maps, etc.) are automatically marshaled to/from JSON for database storage
 
 ## Development Commands
 
@@ -114,9 +114,10 @@ The library integrates with `database/sql` through two interfaces:
    - Primitive types (`string`, `int*`, `float64`, `bool`, `time.Time`, `uuid.UUID`) return their dereferenced value directly
    - Other types check for custom `driver.Valuer` first, then marshal to JSON string
 
-2. **`sql.Scanner` (of.go:211-233)**: Converts database values to Go values
+2. **`sql.Scanner` (of.go:211-247)**: Converts database values to Go values
    - Routes to type-specific scan methods based on the wrapped type using type switch
    - Primitive types use optimized scanning (e.g., `scanString`, `scanInt`, `scanBool`)
+   - Custom types implementing `sql.Scanner` are called directly before JSON fallback
    - All other types fall back to `scanJSON` which unmarshals from JSON
    - Each scan method (in nullable.go) handles SQL NULL properly via `handleScanNull()`
 
