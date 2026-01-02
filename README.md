@@ -515,130 +515,20 @@ go test -run 'TestMarshal|TestUnmarshal|TestNullableEdgeCases' -v
 
 ## Comparison with Alternatives
 
-| Feature | `nullable` | `database/sql.Null*` | `gopkg.in/guregu/null.v4` |
-|---------|-----------|---------------------|--------------------------|
-| Generic (any type) | ✅ `Of[T any]` | ❌ (separate type per kind) | ❌ (separate type per kind) |
-| Clean JSON output | ✅ `null` | ❌ `{"Valid":false}` | ✅ `null` |
-| 3-state model | ✅ (unset/null/value) | ❌ | ⚠️ Limited |
-| PostgreSQL JSON/JSONB | ✅ | ❌ | ⚠️ Limited |
-| UUID support | ✅ | ❌ | ❌ |
-| Custom types | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer |
-| Zero dependencies* | ✅ | ✅ | ❌ |
+| Feature | `nullable` | `aarondl/opt` | `lomsa-dev/gonull` | `database/sql.Null*` | `guregu/null.v4` |
+|---------|-----------|---------------|-------------------|---------------------|------------------|
+| Generic (any type) | ✅ `Of[T any]` | ✅ `Val[T any]` | ✅ `Nullable[T]` | ❌ (separate type per kind) | ❌ (separate type per kind) |
+| Clean JSON output | ✅ `null` | ✅ `null` | ✅ `null` | ❌ `{"Valid":false}` | ✅ `null` |
+| 3-state model | ✅ (unset/null/value) | ✅ (unset/null/value) | ❌ (null/value only) | ❌ | ⚠️ Limited |
+| PostgreSQL JSON/JSONB | ✅ Optimized | ✅ Generic | ❌ | ❌ | ⚠️ Limited |
+| UUID support | ✅ Built-in | ✅ Any type | ❌ | ❌ | ❌ |
+| Custom types | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer |
+| Configurable behavior | ✅ Per-value and package-level | ❌ | ❌ | ❌ | ❌ |
+| Functional operations | ❌ | ✅ `Map()`, etc. | ❌ | ❌ | ❌ |
+| Package structure | Single type | 3 sub-packages | Single type | N/A | N/A |
+| Zero dependencies* | ✅ | ✅ | ✅ | ✅ | ❌ |
 
 *Except `google/uuid` for UUID support
-
-### Detailed Comparison with `aarondl/opt`
-
-The [`opt` package](https://github.com/aarondl/opt) is another modern approach to nullable values in Go. Both libraries now support the 3-state model.
-
-#### Shared 3-State Model
-
-Both `nullable` and `opt` support three states: unset, null, and value.
-
-```go
-// nullable
-type User struct {
-    Name nullable.Of[string]  // Can be: unset OR null OR "John"
-}
-// Zero value is unset
-// Distinguishes: not provided vs explicitly null vs actual value
-
-// opt
-import "github.com/aarondl/opt/omitnull"
-type User struct {
-    Name omitnull.Val[string]  // Can be: unset OR null OR "John"
-}
-```
-
-#### Feature Comparison
-
-| Feature | `nullable` | `opt` |
-|---------|-----------|-------|
-| **State Model** | 3-state (unset/null/value) | 3-state (unset/null/value) |
-| **Zero Value** | `unset` | `unset` |
-| **Clean JSON** | ✅ | ✅ |
-| **Database Operations** | ✅ | ✅ |
-| **Partial Updates** | ✅ | ✅ |
-| **Distinguish unset vs null** | ✅ | ✅ |
-| **Type Parameter** | `Of[T any]` | `Val[T any]` |
-| **PostgreSQL JSON/JSONB** | ✅ Optimized | ✅ Generic |
-| **UUID Support** | ✅ Built-in | ✅ Any type |
-| **Configurable Behavior** | ✅ Per-value and package-level | ❌ |
-| **Functional Operations** | ❌ | ✅ `Map()`, etc. |
-| **Package Structure** | Single type | 3 sub-packages |
-| **Maturity** | Stable | Pre-1.0 |
-
-#### API Comparison
-
-**Creating Values:**
-```go
-// nullable
-name := nullable.FromValue("John")
-email := nullable.Null[string]()
-unset := nullable.Of[string]{}  // unset state
-
-// opt
-import "github.com/aarondl/opt/omitnull"
-name := omitnull.From("John")
-email := omitnull.FromNull[string]()
-unset := omitnull.Val[string]{}  // unset state
-```
-
-**Checking State:**
-```go
-// nullable - 3 distinct checks
-if value.IsUnset() {
-    // field omitted
-} else if value.IsNull() {
-    // explicitly null
-} else {
-    // has value
-}
-
-// opt - 3 distinct checks
-if value.IsUnset() {
-    // field omitted
-} else if value.IsNull() {
-    // explicitly null
-} else if value.IsValue() {
-    // has value
-}
-```
-
-**Getting Values:**
-```go
-// nullable
-if !value.IsNull() && !value.IsUnset() {
-    v := value.GetValue()  // *T
-    fmt.Println(*v)
-}
-
-// opt - more options
-v, ok := value.Get()           // (T, bool)
-v := value.GetOr("default")    // with fallback
-v := value.MustGet()           // panics if not set
-ptr := value.Ptr()             // *T or nil
-```
-
-#### When to Choose Each
-
-**Choose `nullable` when:**
-- Building REST APIs with PATCH endpoints
-- You need clean JSON marshaling for database types
-- You need configurable marshal/scan behavior
-- Working with PostgreSQL JSON/JSONB types
-- You prefer a simpler, single-type API
-
-**Choose `opt` when:**
-- You want functional operations like `Map()`
-- Working with GraphQL (handles optional/nullable distinction)
-- You prefer the multi-package structure
-
-Both packages solve the 3-state problem well and accept any type.
-
-## Similar Projects
-
-This project was inspired by [gonull](https://github.com/lomsa-dev/gonull), which had issues with PostgreSQL types like `enum`, `timestamp`, and `json`/`jsonb`. This library addresses those limitations while providing a cleaner API.
 
 ## Contributing
 
