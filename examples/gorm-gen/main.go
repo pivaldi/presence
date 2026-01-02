@@ -62,15 +62,15 @@ func main() {
 		// Enable presence field generation
 		FieldCoverable:   true, // Generate pointer fields for presence columns
 		FieldWithTypeTag: true, // Add type tag to struct fields
-		FieldPresence:    true, // Enable presence field generation
+		FieldNullable:    true, // Enable presence field generation
 	}
 
-	// Configure presence type wrapper strategy.
+	// Configure nullable type wrapper strategy.
 	// This wraps presence database fields with presence.Of[T].
 	// For example, a presence VARCHAR becomes presence.Of[string]
-	config.WithPresenceNameStrategy(func(fieldType string) string {
-		return fmt.Sprintf("presence.Of[%s]", fieldType)
-	})
+	// config.WithNullableNameStrategy(func(fieldType string) string {
+	// 	return fmt.Sprintf("presence.Of[%s]", fieldType)
+	// })
 
 	// Add required import paths for the generated code
 	config.WithImportPkgPath(
@@ -107,22 +107,6 @@ func main() {
 	// Generate models for all tables in the schema
 	g.ApplyBasic(g.GenerateAllTable()...)
 
-	// Alternative: Generate specific tables only
-	// g.ApplyBasic(
-	//     g.GenerateModel("users"),
-	//     g.GenerateModel("posts"),
-	//     g.GenerateModelAs("user_profiles", "Profile"), // Custom model name
-	// )
-
-	// Alternative: Generate with custom field options
-	// g.ApplyBasic(
-	//     g.GenerateModel("users",
-	//         gen.FieldIgnore("password_hash"),           // Ignore specific field
-	//         gen.FieldType("status", "UserStatus"),      // Custom type for field
-	//         gen.FieldGORMTag("email", "uniqueIndex"),   // Add GORM tag
-	//     ),
-	// )
-
 	// Execute the generation
 	g.Execute()
 
@@ -136,7 +120,7 @@ func main() {
 // jsonMapFunc maps json/jsonb columns to appropriate Go types.
 // Presence JSON columns will be wrapped by WithPresenceNameStrategy.
 func jsonMapFunc(c gorm.ColumnType) string {
-	if presence, _ := c.Presence(); presence {
+	if n, _ := c.Nullable(); n {
 		// Return base type - WithPresenceNameStrategy will wrap it as presence.Of[any]
 		return "any"
 	}
@@ -157,7 +141,7 @@ func integerMapFunc(_ gorm.ColumnType) string {
 // dateMapFunc maps date/timestamp columns to time.Time.
 // Presence date columns will be wrapped by WithPresenceNameStrategy.
 func dateMapFunc(c gorm.ColumnType) string {
-	if presence, _ := c.Presence(); presence {
+	if n, _ := c.Nullable(); n {
 		// Return base type - WithPresenceNameStrategy will wrap it as presence.Of[time.Time]
 		return "time.Time"
 	}
