@@ -29,7 +29,10 @@
       "Bash(cat:*)",
       "Bash(docker:*)",
       "WebSearch",
-      "Bash(/usr/local/go/bin/go build ./...)"
+      "Bash(/usr/local/go/bin/go build ./...)",
+      "Bash(/usr/local/go/bin/go build:*)",
+      "Bash(/usr/local/go/bin/go mod tidy:*)",
+      "Bash(/usr/local/go/bin/go get:*)"
     ]
   }
 }

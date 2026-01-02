@@ -76,9 +76,10 @@ The test suite is located in `tests/` directory with its own `go.mod` that uses 
 
 **Test files:**
 - `marshal_test.go` - Comprehensive tests for JSON marshaling/unmarshaling with complex nested structures
-- `presence_test.go` - Unit tests for presence value operations and edge cases
+- `nullable_test.go` - Unit tests for presence value operations and edge cases
 - `postgres_test.go` - Integration tests with PostgreSQL database using testcontainers
 - `setup_test.go` - TestMain setup with testcontainers, database helpers, and cleanup utilities
+- `config_test.go` - Tests for configuration options (marshal/scan behaviors)
 
 **Test infrastructure:**
 - Uses testcontainers-go to automatically manage PostgreSQL 18 container

@@ -559,31 +559,43 @@ go test -run 'TestMarshal|TestUnmarshal|TestPresenceEdgeCases' -v
 For automatic model generation from database schemas using [gorm.io/gen](https://github.com/go-gorm/gen), see the example in [`examples/gorm-gen/main.go`](examples/gorm-gen/main.go).
 
 The example demonstrates:
-- Configuring `gen.Config` with `WithPresenceNameStrategy` to wrap presence fields as `presence.Of[T]`
-- Custom type mappings for PostgreSQL types (json, jsonb, uuid, date)
+- Using `WithDataTypeMap` to wrap nullable columns with `presence.Of[T]`
+- Custom type mappings for all PostgreSQL types (strings, integers, floats, booleans, dates, json, uuid)
 - Adding required import paths for generated code
 
 Key configuration snippet:
 ```go
-config := gen.Config{
-    FieldPresence: true,
-    // ... other config
+// Helper to wrap nullable columns with presence.Of[T]
+func wrapNullable(c gorm.ColumnType, baseType string) string {
+    if nullable, _ := c.Nullable(); nullable {
+        return fmt.Sprintf("presence.Of[%s]", baseType)
+    }
+    return baseType
 }
 
-// Wrap presence fields with presence.Of[T]
-config.WithPresenceNameStrategy(func(fieldType string) string {
-    return fmt.Sprintf("presence.Of[%s]", fieldType)
-})
+// Type mapping functions
+var dataTypeMap = map[string]func(gorm.ColumnType) string{
+    "varchar": func(c gorm.ColumnType) string { return wrapNullable(c, "string") },
+    "int4":    func(c gorm.ColumnType) string { return wrapNullable(c, "int64") },
+    "bool":    func(c gorm.ColumnType) string { return wrapNullable(c, "bool") },
+    // ... more types
+}
 
-// Add import for presence package
+config := gen.Config{
+    FieldNullable: false, // We handle nullable via WithDataTypeMap
+    // ... other config
+}
 config.WithImportPkgPath("github.com/pivaldi/presence")
+
+g := gen.NewGenerator(config)
+g.WithDataTypeMap(dataTypeMap)
 ```
 
 ## Comparison with Alternatives
 
 | Feature | `presence` | `aarondl/opt` | `lomsa-dev/gonull` | `database/sql.Null*` | `guregu/null.v4` |
 |---------|-----------|---------------|-------------------|---------------------|------------------|
-| Generic (any type) | ✅ `Of[T any]` | ✅ `Val[T any]` | ✅ `Presence[T]` | ❌ (separate type per kind) | ❌ (separate type per kind) |
+| Generic (any type) | ✅ `Of[T any]` | ✅ `Val[T any]` | ✅ `Nullable[T]` | ❌ (separate type per kind) | ❌ (separate type per kind) |
 | Clean JSON output | ✅ `null` | ✅ `null` | ✅ `null` | ❌ `{"Valid":false}` | ✅ `null` |
 | 3-state model | ✅ (unset/null/value) | ✅ (unset/null/value) | ❌ (null/value only) | ❌ | ⚠️ Limited |
 | PostgreSQL JSON/JSONB | ✅ Optimized | ✅ Generic | ❌ | ❌ | ⚠️ Limited |
