@@ -18,8 +18,18 @@ type NullableI[T any] interface {
 	IsUnset() bool
 	// IsSet returns true if the value has been set (null or value)
 	IsSet() bool
-	// GetValue implements the getter.
+	// IsValue returns true if the value is set and not null
+	IsValue() bool
+	// GetValue implements the getter (returns pointer).
 	GetValue() *T
+	// Get returns the value and a boolean indicating presence.
+	Get() (T, bool)
+	// GetOr returns the value or the provided default.
+	GetOr(defaultValue T) T
+	// MustGet returns the value or panics if null/unset.
+	MustGet() T
+	// Ptr returns a pointer to the value, or nil if null/unset.
+	Ptr() *T
 	// SetValue implements the setter.
 	SetValue(T)
 	// SetValueP implements the setter by pointer.
@@ -269,4 +279,92 @@ func (n *Of[T]) handleScanNull() {
 	} else {
 		n.SetNull()
 	}
+}
+
+// Map transforms the value inside Of[T] using the provided function.
+// If the value is null or unset, returns a null/unset Of[U] respectively.
+// Note: This is a package-level function because Go doesn't support
+// type parameters on methods.
+func Map[T, U any](n Of[T], fn func(T) U) Of[U] {
+	if n.IsUnset() {
+		return Of[U]{}
+	}
+
+	if n.IsNull() {
+		return Null[U]()
+	}
+
+	return FromValue(fn(*n.val))
+}
+
+// MapOr transforms the value using fn, or returns defaultValue if null/unset.
+func MapOr[T, U any](n Of[T], defaultValue U, fn func(T) U) U {
+	if n.IsUnset() || n.IsNull() {
+		return defaultValue
+	}
+
+	return fn(*n.val)
+}
+
+// FlatMap transforms the value inside Of[T] using a function that returns Of[U].
+// If the value is null or unset, returns a null/unset Of[U] respectively.
+func FlatMap[T, U any](n Of[T], fn func(T) Of[U]) Of[U] {
+	if n.IsUnset() {
+		return Of[U]{}
+	}
+
+	if n.IsNull() {
+		return Null[U]()
+	}
+
+	return fn(*n.val)
+}
+
+// Filter returns the original value if it passes the predicate, otherwise returns null.
+// If the value is null or unset, returns null/unset respectively.
+func Filter[T any](n Of[T], predicate func(T) bool) Of[T] {
+	if n.IsUnset() {
+		return Of[T]{}
+	}
+
+	if n.IsNull() {
+		return Null[T]()
+	}
+
+	if predicate(*n.val) {
+		return n
+	}
+
+	return Null[T]()
+}
+
+// Or returns the first non-null, non-unset value, or null if all are null/unset.
+func Or[T any](values ...Of[T]) Of[T] {
+	for _, v := range values {
+		if v.IsValue() {
+			return v
+		}
+	}
+
+	return Null[T]()
+}
+
+// FromPtr creates an Of[T] from a pointer.
+// If the pointer is nil, returns null. Otherwise returns the dereferenced value.
+func FromPtr[T any](ptr *T) Of[T] {
+	if ptr == nil {
+		return Null[T]()
+	}
+
+	return FromValue(*ptr)
+}
+
+// FromBool creates an Of[T] based on a boolean condition.
+// If ok is true, returns the value. Otherwise returns null.
+func FromBool[T any](value T, ok bool) Of[T] {
+	if ok {
+		return FromValue(value)
+	}
+
+	return Null[T]()
 }

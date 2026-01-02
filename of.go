@@ -41,6 +41,49 @@ func (n *Of[T]) GetValue() *T {
 	return n.val
 }
 
+// Get returns the value and a boolean indicating if the value is present.
+// Returns (zero value, false) if null or unset.
+func (n *Of[T]) Get() (T, bool) {
+	var zero T
+	if n == nil || n.val == nil {
+		return zero, false
+	}
+
+	return *n.val, true
+}
+
+// GetOr returns the value if present, otherwise returns the provided default.
+func (n *Of[T]) GetOr(defaultValue T) T {
+	if n == nil || n.val == nil {
+		return defaultValue
+	}
+
+	return *n.val
+}
+
+// MustGet returns the value if present, otherwise panics.
+func (n *Of[T]) MustGet() T {
+	if n == nil || n.val == nil {
+		panic("nullable: MustGet called on null or unset value")
+	}
+
+	return *n.val
+}
+
+// Ptr returns a pointer to the value, or nil if null or unset.
+func (n *Of[T]) Ptr() *T {
+	if n == nil {
+		return nil
+	}
+
+	return n.val
+}
+
+// IsValue returns true if the value is set and not null.
+func (n *Of[T]) IsValue() bool {
+	return n != nil && n.isSet && n.val != nil
+}
+
 // SetValue implements the setter.
 func (n *Of[T]) SetValue(b T) {
 	if n == nil {

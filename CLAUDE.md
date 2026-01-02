@@ -9,8 +9,8 @@ This is a Go library (`github.com/pivaldi/nullable`) that provides generic nulla
 ### Core Architecture
 
 **Main library files (root directory):**
-- `nullable.go` - Core interface `NullableI[T]`, helper functions (`FromValue`, `Null`), and type-specific scanning methods (`scanJSON`, `scanString`, `scanUUID`, `scanInt`, `scanFloat`, `scanBool`, `scanTime`)
-- `of.go` - Generic `Of[T]` struct implementation with methods for SQL scanning (`Scan`), SQL value conversion (`Value`), JSON marshaling/unmarshaling, and value management (getters/setters)
+- `nullable.go` - Core interface `NullableI[T]`, helper functions (`FromValue`, `Null`, `FromPtr`, `FromBool`), functional operations (`Map`, `MapOr`, `FlatMap`, `Filter`, `Or`), and type-specific scanning methods
+- `of.go` - Generic `Of[T]` struct implementation with methods for SQL scanning (`Scan`), SQL value conversion (`Value`), JSON marshaling/unmarshaling, value access (`Get`, `GetOr`, `MustGet`, `Ptr`), and state management
 - `doc.go` - Package documentation
 
 **Key design patterns:**
@@ -19,6 +19,7 @@ This is a Go library (`github.com/pivaldi/nullable`) that provides generic nulla
 3. **Custom type support**: Types implementing `sql.Scanner` or `driver.Valuer` interfaces are automatically supported without JSON marshaling
 4. **Dual module structure**: Main module at root, separate test module in `tests/` directory with `replace` directive
 5. **3-state model**: Distinguishes between unset (zero value), null (explicitly set to null), and value (has a concrete value)
+6. **Functional operations**: Package-level functions (`Map`, `FlatMap`, `Filter`, `Or`) for transforming nullable values (methods can't have additional type parameters in Go)
 
 ### Supported Types
 

@@ -425,9 +425,14 @@ name := nullable.FromValue("John")
 email := nullable.Null[string]()
 
 // From a pointer (nil pointer becomes null)
-var ptr *string = nil
-value := nullable.Of[string]{}
-value.SetValueP(ptr) // Sets to null
+value := nullable.FromPtr(ptr) // Returns null if ptr is nil
+
+// From a boolean condition
+value := nullable.FromBool("value", ok) // Returns null if ok is false
+
+// Using SetValueP
+var val nullable.Of[string]
+val.SetValueP(ptr) // Sets to null if ptr is nil
 ```
 
 ### Checking and Accessing Values
@@ -443,12 +448,16 @@ if value.IsNull() {
 if value.IsSet() {
     // Field has a value or is explicitly null
 }
-
-// Get value (returns *T)
-if !value.IsNull() && !value.IsUnset() {
-    v := value.GetValue()
-    fmt.Println(*v)
+if value.IsValue() {
+    // Field has a concrete value (not null, not unset)
 }
+
+// Get value - multiple options
+v := value.GetValue()           // Returns *T (nil if null/unset)
+v, ok := value.Get()            // Returns (T, bool)
+v := value.GetOr("default")     // Returns T or default
+v := value.MustGet()            // Returns T or panics
+ptr := value.Ptr()              // Returns *T (nil if null/unset)
 ```
 
 ### Setting Values
@@ -483,6 +492,36 @@ err := json.Unmarshal([]byte(`"hello"`), &value)
 // Unmarshal null
 err := json.Unmarshal([]byte(`null`), &value)
 // value.IsNull() == true
+```
+
+### Functional Operations
+
+```go
+// Map - transform the value (package-level function due to Go generics limitations)
+age := nullable.FromValue(25)
+ageStr := nullable.Map(age, func(a int) string {
+    return fmt.Sprintf("%d years old", a)
+})
+// ageStr contains "25 years old"
+
+// MapOr - transform or return default
+result := nullable.MapOr(age, "unknown", func(a int) string {
+    return fmt.Sprintf("%d years old", a)
+})
+
+// FlatMap - transform to another nullable
+user := nullable.FlatMap(userID, func(id int) nullable.Of[User] {
+    return fetchUser(id) // returns nullable.Of[User]
+})
+
+// Filter - keep value only if predicate passes
+adult := nullable.Filter(age, func(a int) bool {
+    return a >= 18
+})
+// Returns null if age < 18
+
+// Or - return first non-null value
+name := nullable.Or(preferredName, displayName, defaultName)
 ```
 
 ## Testing
@@ -524,7 +563,7 @@ go test -run 'TestMarshal|TestUnmarshal|TestNullableEdgeCases' -v
 | UUID support | ✅ Built-in | ✅ Any type | ❌ | ❌ | ❌ |
 | Custom types | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer | ✅ via Scanner/Valuer |
 | Configurable behavior | ✅ Per-value and package-level | ❌ | ❌ | ❌ | ❌ |
-| Functional operations | ❌ | ✅ `Map()`, etc. | ❌ | ❌ | ❌ |
+| Functional operations | ✅ `Map()`, `Filter()`, etc. | ✅ `Map()`, etc. | ❌ | ❌ | ❌ |
 | Package structure | Single type | 3 sub-packages | Single type | N/A | N/A |
 | Zero dependencies* | ✅ | ✅ | ✅ | ✅ | ❌ |
 
