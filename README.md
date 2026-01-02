@@ -552,6 +552,33 @@ cd tests
 go test -run 'TestMarshal|TestUnmarshal|TestNullableEdgeCases' -v
 ```
 
+## Examples
+
+### gorm.io/gen Integration
+
+For automatic model generation from database schemas using [gorm.io/gen](https://github.com/go-gorm/gen), see the example in [`examples/gorm-gen/main.go`](examples/gorm-gen/main.go).
+
+The example demonstrates:
+- Configuring `gen.Config` with `WithNullableNameStrategy` to wrap nullable fields as `nullable.Of[T]`
+- Custom type mappings for PostgreSQL types (json, jsonb, uuid, date)
+- Adding required import paths for generated code
+
+Key configuration snippet:
+```go
+config := gen.Config{
+    FieldNullable: true,
+    // ... other config
+}
+
+// Wrap nullable fields with nullable.Of[T]
+config.WithNullableNameStrategy(func(fieldType string) string {
+    return fmt.Sprintf("nullable.Of[%s]", fieldType)
+})
+
+// Add import for nullable package
+config.WithImportPkgPath("github.com/pivaldi/nullable")
+```
+
 ## Comparison with Alternatives
 
 | Feature | `nullable` | `aarondl/opt` | `lomsa-dev/gonull` | `database/sql.Null*` | `guregu/null.v4` |
