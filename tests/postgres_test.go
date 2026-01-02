@@ -10,24 +10,24 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/pivaldi/nullable"
+	"github.com/pivaldi/presence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TypeTest represents all supported nullable types
+// TypeTest represents all supported presence types
 type TypeTest struct {
 	ID        int64                  `db:"id"`
-	StringVal nullable.Of[string]    `db:"string_val"`
-	IntVal    nullable.Of[int]       `db:"int_val"`
-	Int16Val  nullable.Of[int16]     `db:"int16_val"`
-	Int32Val  nullable.Of[int32]     `db:"int32_val"`
-	Int64Val  nullable.Of[int64]     `db:"int64_val"`
-	FloatVal  nullable.Of[float64]   `db:"float_val"`
-	BoolVal   nullable.Of[bool]      `db:"bool_val"`
-	UUIDVal   nullable.Of[uuid.UUID] `db:"uuid_val"`
-	TimeVal   nullable.Of[time.Time] `db:"time_val"`
-	JSONVal   nullable.Of[any]       `db:"json_val"`
+	StringVal presence.Of[string]    `db:"string_val"`
+	IntVal    presence.Of[int]       `db:"int_val"`
+	Int16Val  presence.Of[int16]     `db:"int16_val"`
+	Int32Val  presence.Of[int32]     `db:"int32_val"`
+	Int64Val  presence.Of[int64]     `db:"int64_val"`
+	FloatVal  presence.Of[float64]   `db:"float_val"`
+	BoolVal   presence.Of[bool]      `db:"bool_val"`
+	UUIDVal   presence.Of[uuid.UUID] `db:"uuid_val"`
+	TimeVal   presence.Of[time.Time] `db:"time_val"`
+	JSONVal   presence.Of[any]       `db:"json_val"`
 }
 
 func TestAllTypes(t *testing.T) {
@@ -38,16 +38,16 @@ func TestAllTypes(t *testing.T) {
 	testTime := time.Now().UTC().Truncate(time.Second)
 
 	typeTest := TypeTest{
-		StringVal: nullable.FromValue("test string"),
-		IntVal:    nullable.FromValue(aint),
-		Int16Val:  nullable.FromValue(int16(16)),
-		Int32Val:  nullable.FromValue(int32(32)),
-		Int64Val:  nullable.FromValue(int64(64)),
-		FloatVal:  nullable.FromValue(3.14),
-		BoolVal:   nullable.FromValue(true),
-		UUIDVal:   nullable.FromValue(testUUID),
-		TimeVal:   nullable.FromValue(testTime),
-		JSONVal:   nullable.FromValue[any](map[string]any{"key": "value"}),
+		StringVal: presence.FromValue("test string"),
+		IntVal:    presence.FromValue(aint),
+		Int16Val:  presence.FromValue(int16(16)),
+		Int32Val:  presence.FromValue(int32(32)),
+		Int64Val:  presence.FromValue(int64(64)),
+		FloatVal:  presence.FromValue(3.14),
+		BoolVal:   presence.FromValue(true),
+		UUIDVal:   presence.FromValue(testUUID),
+		TimeVal:   presence.FromValue(testTime),
+		JSONVal:   presence.FromValue[any](map[string]any{"key": "value"}),
 	}
 
 	// Insert
@@ -174,9 +174,9 @@ func TestNullValues(t *testing.T) {
 	cleanupTables(t, db, "type_test")
 
 	test := testedStruct[embeddedStruct]{
-		Name:   nullable.Null[string](),
-		DateTo: nullable.Null[time.Time](),
-		Data:   nullable.Null[embeddedStruct](),
+		Name:   presence.Null[string](),
+		DateTo: presence.Null[time.Time](),
+		Data:   presence.Null[embeddedStruct](),
 	}
 
 	var insertedID int64
@@ -217,9 +217,9 @@ func TestInsertAndRead(t *testing.T) {
 	data := getEmbeddedObj()
 
 	test := testedStruct[embeddedStruct]{
-		Name:   nullable.FromValue(name),
-		DateTo: nullable.FromValue(now),
-		Data:   nullable.FromValue(data),
+		Name:   presence.FromValue(name),
+		DateTo: presence.FromValue(now),
+		Data:   presence.FromValue(data),
 	}
 
 	var insertedID int64
@@ -277,9 +277,9 @@ func TestInsertAndReadWithSqlx(t *testing.T) {
 	data := getEmbeddedObj()
 
 	test := testedStruct[embeddedStruct]{
-		Name:   nullable.FromValue(name),
-		DateTo: nullable.FromValue(now),
-		Data:   nullable.FromValue(data),
+		Name:   presence.FromValue(name),
+		DateTo: presence.FromValue(now),
+		Data:   presence.FromValue(data),
 	}
 
 	var query string

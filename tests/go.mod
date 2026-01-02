@@ -1,4 +1,4 @@
-module github.com/pivaldi/nullable/tests
+module github.com/pivaldi/presence/tests
 
 go 1.24.0
 
@@ -6,7 +6,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/pivaldi/nullable v0.0.0
+	github.com/pivaldi/presence v0.0.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.40.0
@@ -72,4 +72,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/pivaldi/nullable => ../
+replace github.com/pivaldi/presence => ../

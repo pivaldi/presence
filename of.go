@@ -1,4 +1,4 @@
-package nullable
+package presence
 
 import (
 	"database/sql"
@@ -64,7 +64,7 @@ func (n *Of[T]) GetOr(defaultValue T) T {
 // MustGet returns the value if present, otherwise panics.
 func (n *Of[T]) MustGet() T {
 	if n == nil || n.val == nil {
-		panic("nullable: MustGet called on null or unset value")
+		panic("presence: MustGet called on null or unset value")
 	}
 
 	return *n.val
@@ -176,7 +176,7 @@ func (n Of[T]) MarshalJSON() ([]byte, error) {
 
 	b, err := json.Marshal(n.GetValue())
 	if err != nil {
-		return nil, fmt.Errorf("nullable json marshaling %T : %w", n, err)
+		return nil, fmt.Errorf("presence json marshaling %T : %w", n, err)
 	}
 
 	return b, nil
@@ -211,7 +211,7 @@ func (n *Of[T]) UnmarshalJSON(data []byte) error {
 
 	err := json.Unmarshal(data, n.val)
 	if err != nil {
-		return fmt.Errorf("nullable Unmarshal Error : %w", err)
+		return fmt.Errorf("presence Unmarshal Error : %w", err)
 	}
 
 	n.isSet = true
@@ -237,7 +237,7 @@ func (n Of[T]) Value() (driver.Value, error) {
 		if valuer, ok := value.(driver.Valuer); ok {
 			v, err := valuer.Value()
 			if err != nil {
-				return nil, fmt.Errorf("custom valuer error on nullable : %w", err)
+				return nil, fmt.Errorf("custom valuer error on presence : %w", err)
 			}
 
 			return v, nil
@@ -245,7 +245,7 @@ func (n Of[T]) Value() (driver.Value, error) {
 
 		b, err := json.Marshal(value)
 		if err != nil {
-			return nil, fmt.Errorf("nullable database value error : %w", err)
+			return nil, fmt.Errorf("presence database value error : %w", err)
 		}
 
 		return string(b), nil
@@ -279,7 +279,7 @@ func (n *Of[T]) Scan(v any) error {
 
 	if scaner, ok := v.(sql.Scanner); ok {
 		if err := scaner.Scan(v); err != nil {
-			return fmt.Errorf("custom sql scaner error on nullable : %w", err)
+			return fmt.Errorf("custom sql scaner error on presence : %w", err)
 		}
 
 		return nil

@@ -1,10 +1,10 @@
 // Package main demonstrates how to configure gorm.io/gen to generate
-// database models using the nullable package for nullable fields.
+// database models using the presence package for presence fields.
 //
 // This example shows:
-//   - How to configure gen.Config for nullable field generation
+//   - How to configure gen.Config for presence field generation
 //   - Custom type mapping for PostgreSQL types (json, jsonb, uuid, date)
-//   - Using WithNullableNameStrategy to wrap nullable fields with nullable.Of[T]
+//   - Using WithPresenceNameStrategy to wrap presence fields with presence.Of[T]
 //
 // Usage:
 //
@@ -59,22 +59,22 @@ func main() {
 		Mode:         gen.WithDefaultQuery | gen.WithQueryInterface,
 		OutFile:      schemaName + ".go",
 
-		// Enable nullable field generation
-		FieldCoverable:   true, // Generate pointer fields for nullable columns
+		// Enable presence field generation
+		FieldCoverable:   true, // Generate pointer fields for presence columns
 		FieldWithTypeTag: true, // Add type tag to struct fields
-		FieldNullable:    true, // Enable nullable field generation
+		FieldPresence:    true, // Enable presence field generation
 	}
 
-	// Configure nullable type wrapper strategy.
-	// This wraps nullable database fields with nullable.Of[T].
-	// For example, a nullable VARCHAR becomes nullable.Of[string]
-	config.WithNullableNameStrategy(func(fieldType string) string {
-		return fmt.Sprintf("nullable.Of[%s]", fieldType)
+	// Configure presence type wrapper strategy.
+	// This wraps presence database fields with presence.Of[T].
+	// For example, a presence VARCHAR becomes presence.Of[string]
+	config.WithPresenceNameStrategy(func(fieldType string) string {
+		return fmt.Sprintf("presence.Of[%s]", fieldType)
 	})
 
 	// Add required import paths for the generated code
 	config.WithImportPkgPath(
-		"github.com/pivaldi/nullable",
+		"github.com/pivaldi/presence",
 		"github.com/google/uuid",
 	)
 
@@ -134,14 +134,14 @@ func main() {
 // Type mapping functions for PostgreSQL types
 
 // jsonMapFunc maps json/jsonb columns to appropriate Go types.
-// Nullable JSON columns will be wrapped by WithNullableNameStrategy.
+// Presence JSON columns will be wrapped by WithPresenceNameStrategy.
 func jsonMapFunc(c gorm.ColumnType) string {
-	if nullable, _ := c.Nullable(); nullable {
-		// Return base type - WithNullableNameStrategy will wrap it as nullable.Of[any]
+	if presence, _ := c.Presence(); presence {
+		// Return base type - WithPresenceNameStrategy will wrap it as presence.Of[any]
 		return "any"
 	}
-	// Non-nullable JSON still uses nullable.Of for convenient JSON handling
-	return "nullable.Of[any]"
+	// Non-presence JSON still uses presence.Of for convenient JSON handling
+	return "presence.Of[any]"
 }
 
 // uuidMapFunc maps uuid columns to uuid.UUID type.
@@ -155,14 +155,14 @@ func integerMapFunc(_ gorm.ColumnType) string {
 }
 
 // dateMapFunc maps date/timestamp columns to time.Time.
-// Nullable date columns will be wrapped by WithNullableNameStrategy.
+// Presence date columns will be wrapped by WithPresenceNameStrategy.
 func dateMapFunc(c gorm.ColumnType) string {
-	if nullable, _ := c.Nullable(); nullable {
-		// Return base type - WithNullableNameStrategy will wrap it as nullable.Of[time.Time]
+	if presence, _ := c.Presence(); presence {
+		// Return base type - WithPresenceNameStrategy will wrap it as presence.Of[time.Time]
 		return "time.Time"
 	}
-	// Non-nullable dates still benefit from nullable.Of for zero value handling
-	return "nullable.Of[time.Time]"
+	// Non-presence dates still benefit from presence.Of for zero value handling
+	return "presence.Of[time.Time]"
 }
 
 // snakeToCamelCase converts snake_case to camelCase for JSON tags.

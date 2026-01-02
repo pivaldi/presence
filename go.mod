@@ -1,4 +1,4 @@
-module github.com/pivaldi/nullable
+module github.com/pivaldi/presence
 
 go 1.24.0
 

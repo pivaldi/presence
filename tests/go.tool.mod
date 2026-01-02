@@ -1,4 +1,4 @@
-module github.com/pivaldi/nullable/tests
+module github.com/pivaldi/presence/tests
 
 go 1.24.0
 

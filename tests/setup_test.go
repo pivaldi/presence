@@ -10,7 +10,7 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/pivaldi/nullable"
+	"github.com/pivaldi/presence"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -31,16 +31,16 @@ type embeddedStruct struct {
 	ID     int64                  `json:"id" db:"id"`
 	String string                 `json:"string" db:"string"`
 	Int    int                    `json:"int" db:"int"`
-	Bool   nullable.Of[bool]      `json:"bool" db:"bool"`
-	DateTo nullable.Of[time.Time] `json:"dateTo" db:"date_to"`
-	JSON   nullable.Of[any]       `json:"json" db:"json"`
+	Bool   presence.Of[bool]      `json:"bool" db:"bool"`
+	DateTo presence.Of[time.Time] `json:"dateTo" db:"date_to"`
+	JSON   presence.Of[any]       `json:"json" db:"json"`
 }
 
 type testedStruct[T any] struct {
 	ID     int64                  `json:"id" db:"id"`
-	Name   nullable.Of[string]    `json:"name" db:"name"`
-	DateTo nullable.Of[time.Time] `json:"dateTo" db:"date_to"`
-	Data   nullable.Of[T]         `json:"data" db:"data"`
+	Name   presence.Of[string]    `json:"name" db:"name"`
+	DateTo presence.Of[time.Time] `json:"dateTo" db:"date_to"`
+	Data   presence.Of[T]         `json:"data" db:"data"`
 }
 
 // TestMain sets up the PostgreSQL container before tests and tears it down after
@@ -126,11 +126,11 @@ func getEmbeddedObj() embeddedStruct {
 	obj := embeddedStruct{
 		String: astring,
 		Int:    aint,
-		Bool:   nullable.FromValue(true),
-		DateTo: nullable.FromValue(now),
+		Bool:   presence.FromValue(true),
+		DateTo: presence.FromValue(now),
 	}
 
-	obj.JSON = nullable.FromValue[any](obj)
+	obj.JSON = presence.FromValue[any](obj)
 
 	return obj
 }
@@ -138,17 +138,17 @@ func getEmbeddedObj() embeddedStruct {
 func getNullTestObj[T any]() testedStruct[T] {
 	return testedStruct[T]{
 		ID:     1,
-		Name:   nullable.Null[string](),    // Null value
-		DateTo: nullable.Null[time.Time](), // Null value
-		Data:   nullable.Null[T](),         // Null value
+		Name:   presence.Null[string](),    // Null value
+		DateTo: presence.Null[time.Time](), // Null value
+		Data:   presence.Null[T](),         // Null value
 	}
 }
 
 func getTestObjs[T any](data T) []testedStruct[T] {
 	obj1 := testedStruct[T]{
-		Name:   nullable.FromValue(name),
-		DateTo: nullable.FromValue(now),
-		Data:   nullable.FromValue(data),
+		Name:   presence.FromValue(name),
+		DateTo: presence.FromValue(now),
+		Data:   presence.FromValue(data),
 	}
 
 	obj2 := getNullTestObj[T]()

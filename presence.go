@@ -1,4 +1,4 @@
-package nullable
+package presence
 
 import (
 	"database/sql"
@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type NullableI[T any] interface {
+type PresenceI[T any] interface {
 	// IsNull returns true if itself is nil or the value is nil/null
 	IsNull() bool
 	// IsUnset returns true if the value has not been set
@@ -48,7 +48,7 @@ type NullableI[T any] interface {
 	Scan(v any) error
 }
 
-// FromValue is a Nullable constructor from the given value thanks to Go generics' inference.
+// FromValue is a Presence constructor from the given value thanks to Go generics' inference.
 func FromValue[T any](b T) Of[T] {
 	out := Of[T]{}
 	out.SetValue(b)
@@ -56,7 +56,7 @@ func FromValue[T any](b T) Of[T] {
 	return out
 }
 
-// Null is a Nullable constructor with explicit Null value.
+// Null is a Presence constructor with explicit Null value.
 func Null[T any]() Of[T] {
 	n := Of[T]{}
 	n.SetNull()
@@ -72,7 +72,7 @@ func (n *Of[T]) scanJSON(v any) error {
 	null := sql.NullString{}
 	err := null.Scan(v)
 	if err != nil {
-		return fmt.Errorf("nullable database scanning json : %w", err)
+		return fmt.Errorf("presence database scanning json : %w", err)
 	}
 
 	if null.Valid {
@@ -81,12 +81,12 @@ func (n *Of[T]) scanJSON(v any) error {
 		if scanner, ok := any(value).(sql.Scanner); ok {
 			err := scanner.Scan(v)
 			if err != nil {
-				return fmt.Errorf("custom scanner error on nullable : %w", err)
+				return fmt.Errorf("custom scanner error on presence : %w", err)
 			}
 		} else {
 			err := json.Unmarshal([]byte(null.String), value)
 			if err != nil {
-				return fmt.Errorf("nullable database unmarshaling json : %w", err)
+				return fmt.Errorf("presence database unmarshaling json : %w", err)
 			}
 		}
 
@@ -106,7 +106,7 @@ func (n *Of[T]) scanString(v any) error {
 	null := sql.NullString{}
 	err := null.Scan(v)
 	if err != nil {
-		return fmt.Errorf("nullable database scanning string : %w", err)
+		return fmt.Errorf("presence database scanning string : %w", err)
 	}
 
 	if null.Valid {
@@ -126,7 +126,7 @@ func (n *Of[T]) scanUUID(v any) error {
 	null := sql.NullString{}
 	err := null.Scan(v)
 	if err != nil {
-		return fmt.Errorf("nullable database scanning string : %w", err)
+		return fmt.Errorf("presence database scanning string : %w", err)
 	}
 
 	if null.Valid {
@@ -149,7 +149,7 @@ func (n *Of[T]) scanInt(v any) error {
 		null := new(sql.NullInt16)
 		err := null.Scan(v)
 		if err != nil {
-			return fmt.Errorf("nullable database scanning int16 : %w", err)
+			return fmt.Errorf("presence database scanning int16 : %w", err)
 		}
 
 		if null.Valid {
@@ -163,7 +163,7 @@ func (n *Of[T]) scanInt(v any) error {
 		null := new(sql.NullInt32)
 		err := null.Scan(v)
 		if err != nil {
-			return fmt.Errorf("nullable database scanning int32 : %w", err)
+			return fmt.Errorf("presence database scanning int32 : %w", err)
 		}
 
 		if null.Valid {
@@ -177,7 +177,7 @@ func (n *Of[T]) scanInt(v any) error {
 		null := new(sql.NullInt64)
 		err := null.Scan(v)
 		if err != nil {
-			return fmt.Errorf("nullable database scanning int : %w", err)
+			return fmt.Errorf("presence database scanning int : %w", err)
 		}
 
 		if null.Valid {
@@ -191,7 +191,7 @@ func (n *Of[T]) scanInt(v any) error {
 		null := new(sql.NullInt64)
 		err := null.Scan(v)
 		if err != nil {
-			return fmt.Errorf("nullable database scanning int64 : %w", err)
+			return fmt.Errorf("presence database scanning int64 : %w", err)
 		}
 
 		if null.Valid {
@@ -210,7 +210,7 @@ func (n *Of[T]) scanFloat(v any) error {
 	null := new(sql.NullFloat64)
 	err := null.Scan(v)
 	if err != nil {
-		return fmt.Errorf("nullable database scanning float64 : %w", err)
+		return fmt.Errorf("presence database scanning float64 : %w", err)
 	}
 
 	if null.Valid {
@@ -226,7 +226,7 @@ func (n *Of[T]) scanBool(v any) error {
 	null := new(sql.NullBool)
 	err := null.Scan(v)
 	if err != nil {
-		return fmt.Errorf("nullable database scanning bool : %w", err)
+		return fmt.Errorf("presence database scanning bool : %w", err)
 	}
 
 	if null.Valid {
@@ -257,7 +257,7 @@ func (n *Of[T]) scanTime(v any) error {
 	case time.Time:
 		err := null.Scan(v)
 		if err != nil {
-			return fmt.Errorf("nullable database scanning Time : %w", err)
+			return fmt.Errorf("presence database scanning Time : %w", err)
 		}
 	default:
 		return fmt.Errorf("canot parse type \"%T\" with value \"%v\" to time", t, t)

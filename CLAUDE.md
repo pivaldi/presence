@@ -4,22 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Go library (`github.com/pivaldi/nullable`) that provides generic nullable types for any data type, with special focus on database operations and JSON marshaling/unmarshaling. The library uses Go generics to wrap values in a nullable container (`Of[T]`) that can represent SQL NULL values while maintaining type safety.
+This is a Go library (`github.com/pivaldi/presence`) that provides generic presence types for any data type, with special focus on database operations and JSON marshaling/unmarshaling. The library uses Go generics to wrap values in a presence container (`Of[T]`) that can represent SQL NULL values while maintaining type safety.
 
 ### Core Architecture
 
 **Main library files (root directory):**
-- `nullable.go` - Core interface `NullableI[T]`, helper functions (`FromValue`, `Null`, `FromPtr`, `FromBool`), functional operations (`Map`, `MapOr`, `FlatMap`, `Filter`, `Or`), and type-specific scanning methods
+- `presence.go` - Core interface `PresenceI[T]`, helper functions (`FromValue`, `Null`, `FromPtr`, `FromBool`), functional operations (`Map`, `MapOr`, `FlatMap`, `Filter`, `Or`), and type-specific scanning methods
 - `of.go` - Generic `Of[T]` struct implementation with methods for SQL scanning (`Scan`), SQL value conversion (`Value`), JSON marshaling/unmarshaling, value access (`Get`, `GetOr`, `MustGet`, `Ptr`), and state management
 - `doc.go` - Package documentation
 
 **Key design patterns:**
-1. **Generic nullable wrapper**: `Of[T any]` wraps any type `T` with an internal pointer `val *T` where `nil` represents NULL, plus `isSet bool` for 3-state support
+1. **Generic presence wrapper**: `Of[T any]` wraps any type `T` with an internal pointer `val *T` where `nil` represents NULL, plus `isSet bool` for 3-state support
 2. **Type dispatch in Scan/Value**: The `Scan` and `Value` methods use type switches to route to specialized handlers for primitive types, with fallback to JSON for all other types
 3. **Custom type support**: Types implementing `sql.Scanner` or `driver.Valuer` interfaces are automatically supported without JSON marshaling
 4. **Dual module structure**: Main module at root, separate test module in `tests/` directory with `replace` directive
 5. **3-state model**: Distinguishes between unset (zero value), null (explicitly set to null), and value (has a concrete value)
-6. **Functional operations**: Package-level functions (`Map`, `FlatMap`, `Filter`, `Or`) for transforming nullable values (methods can't have additional type parameters in Go)
+6. **Functional operations**: Package-level functions (`Map`, `FlatMap`, `Filter`, `Or`) for transforming presence values (methods can't have additional type parameters in Go)
 
 ### Supported Types
 
@@ -76,7 +76,7 @@ The test suite is located in `tests/` directory with its own `go.mod` that uses 
 
 **Test files:**
 - `marshal_test.go` - Comprehensive tests for JSON marshaling/unmarshaling with complex nested structures
-- `nullable_test.go` - Unit tests for nullable value operations and edge cases
+- `presence_test.go` - Unit tests for presence value operations and edge cases
 - `postgres_test.go` - Integration tests with PostgreSQL database using testcontainers
 - `setup_test.go` - TestMain setup with testcontainers, database helpers, and cleanup utilities
 
@@ -120,7 +120,7 @@ The library integrates with `database/sql` through two interfaces:
    - Primitive types use optimized scanning (e.g., `scanString`, `scanInt`, `scanBool`)
    - Custom types implementing `sql.Scanner` are called directly before JSON fallback
    - All other types fall back to `scanJSON` which unmarshals from JSON
-   - Each scan method (in nullable.go) handles SQL NULL properly via `handleScanNull()`
+   - Each scan method (in presence.go) handles SQL NULL properly via `handleScanNull()`
 
 ## Go Version and Dependencies
 
@@ -131,7 +131,7 @@ The library integrates with `database/sql` through two interfaces:
 
 ## Common Gotchas
 
-1. **Module structure**: Root module (`github.com/pivaldi/nullable`) and test module (`github.com/pivaldi/nullable/tests`) are separate. Always run `go mod tidy` in both directories after dependency changes.
+1. **Module structure**: Root module (`github.com/pivaldi/presence`) and test module (`github.com/pivaldi/presence/tests`) are separate. Always run `go mod tidy` in both directories after dependency changes.
 
 2. **Test execution**: Integration tests require Docker to be running (testcontainers uses it). Run `cd tests && go test -v ./...` or `make test` for the full suite.
 
@@ -139,4 +139,4 @@ The library integrates with `database/sql` through two interfaces:
 
 4. **Time precision**: PostgreSQL tests truncate time to seconds (`Truncate(time.Second)`) to match database precision.
 
-5. **3-state assertions in tests**: When testing nullable fields in structs, use `.IsNull()` and `.GetValue()` methods instead of checking struct fields directly (e.g., `assert.True(t, field.IsNull())` not `assert.Nil(t, field)`).
+5. **3-state assertions in tests**: When testing presence fields in structs, use `.IsNull()` and `.GetValue()` methods instead of checking struct fields directly (e.g., `assert.True(t, field.IsNull())` not `assert.Nil(t, field)`).

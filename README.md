@@ -1,16 +1,16 @@
-# Go Nullable
+# Go Presence
 
-[![golangci-lint](https://github.com/pivaldi/nullable/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/golangci-lint.yml)
-[![mod-verify](https://github.com/pivaldi/nullable/actions/workflows/mod-verify.yml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/mod-verify.yml)
-[![gosec](https://github.com/pivaldi/nullable/actions/workflows/gosec.yaml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/gosec.yaml)
-[![staticcheck](https://github.com/pivaldi/nullable/actions/workflows/staticcheck.yaml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/staticcheck.yaml)
-[![test](https://github.com/pivaldi/nullable/actions/workflows/test.yml/badge.svg)](https://github.com/pivaldi/nullable/actions/workflows/test.yml)
+[![golangci-lint](https://github.com/pivaldi/presence/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/pivaldi/presence/actions/workflows/golangci-lint.yml)
+[![mod-verify](https://github.com/pivaldi/presence/actions/workflows/mod-verify.yml/badge.svg)](https://github.com/pivaldi/presence/actions/workflows/mod-verify.yml)
+[![gosec](https://github.com/pivaldi/presence/actions/workflows/gosec.yaml/badge.svg)](https://github.com/pivaldi/presence/actions/workflows/gosec.yaml)
+[![staticcheck](https://github.com/pivaldi/presence/actions/workflows/staticcheck.yaml/badge.svg)](https://github.com/pivaldi/presence/actions/workflows/staticcheck.yaml)
+[![test](https://github.com/pivaldi/presence/actions/workflows/test.yml/badge.svg)](https://github.com/pivaldi/presence/actions/workflows/test.yml)
 
-A type-safe nullable value library for Go using generics, designed for seamless JSON marshaling and database operations.
+A type-safe presence value library for Go using generics, designed for seamless JSON marshaling and database operations.
 
 ## Features
 
-- **Type-safe nullable values** for any supported type using Go generics
+- **Type-safe presence values** for any supported type using Go generics
 - **3-state model** distinguishing unset, null, and value states for PATCH API support
 - **Database-friendly** with built-in `sql.Scanner` and `driver.Valuer` implementations
 - **JSON marshaling** that uses standard `null` instead of `{Valid: true, Value: ...}`
@@ -23,18 +23,18 @@ A type-safe nullable value library for Go using generics, designed for seamless 
 ## Installation
 
 ```bash
-go get github.com/pivaldi/nullable
+go get github.com/pivaldi/presence
 ```
 
 ## Quick Start
 
 ```go
-import "github.com/pivaldi/nullable"
+import "github.com/pivaldi/presence"
 
-// Create nullable values
-name := nullable.FromValue("John Doe")
-age := nullable.FromValue(30)
-email := nullable.Null[string]() // Explicitly null
+// Create presence values
+name := presence.FromValue("John Doe")
+age := presence.FromValue(30)
+email := presence.Null[string]() // Explicitly null
 
 // Check if null
 if name.IsNull() {
@@ -64,13 +64,13 @@ For database operations:
 
 ## Three-State Model
 
-The library supports a 3-state model for nullable values, enabling PATCH API semantics and partial updates:
+The library supports a 3-state model for presence values, enabling PATCH API semantics and partial updates:
 
 | State | Description | Creation |
 |-------|-------------|----------|
-| Unset | Field was never touched | `nullable.Of[T]{}` or `var x nullable.Of[T]` |
-| Null | Explicitly set to null | `nullable.Null[T]()` |
-| Value | Has a concrete value | `nullable.FromValue(x)` |
+| Unset | Field was never touched | `presence.Of[T]{}` or `var x presence.Of[T]` |
+| Null | Explicitly set to null | `presence.Null[T]()` |
+| Value | Has a concrete value | `presence.FromValue(x)` |
 
 ### Checking State
 
@@ -90,9 +90,9 @@ if value.IsSet() {
 
 ```go
 type UpdateUserRequest struct {
-    Name  nullable.Of[string] `json:"name,omitempty"`
-    Email nullable.Of[string] `json:"email,omitempty"`
-    Age   nullable.Of[int]    `json:"age,omitempty"`
+    Name  presence.Of[string] `json:"name,omitempty"`
+    Email presence.Of[string] `json:"email,omitempty"`
+    Age   presence.Of[int]    `json:"age,omitempty"`
 }
 
 func UpdateUser(req UpdateUserRequest) {
@@ -124,16 +124,16 @@ Unset values can be omitted from JSON output using the `omitzero` struct tag (in
 
 ```go
 type Request struct {
-    Name nullable.Of[string] `json:"name,omitzero"` // omitted when unset (Go 1.24+)
-    Age  nullable.Of[int]    `json:"age"`           // always included
+    Name presence.Of[string] `json:"name,omitzero"` // omitted when unset (Go 1.24+)
+    Age  presence.Of[int]    `json:"age"`           // always included
 }
 
 // Package-level default (default: UnsetSkip)
-nullable.SetDefaultMarshalUnset(nullable.UnsetNull)
+presence.SetDefaultMarshalUnset(presence.UnsetNull)
 
 // Per-value override
-val := nullable.Of[string]{}
-val.SetMarshalUnset(nullable.UnsetNull)
+val := presence.Of[string]{}
+val.SetMarshalUnset(presence.UnsetNull)
 ```
 
 **Note:** The `omitempty` tag does NOT use `IsZero()` and will include `null` values. Use `omitzero` for proper 3-state omission behavior.
@@ -144,11 +144,11 @@ Control how SQL NULL scans:
 
 ```go
 // Package-level default (default: ScanNullAsNull)
-nullable.SetDefaultScanNull(nullable.ScanNullAsUnset)
+presence.SetDefaultScanNull(presence.ScanNullAsUnset)
 
 // Per-value override
-val := nullable.Of[string]{}
-val.SetScanNull(nullable.ScanNullAsUnset)
+val := presence.Of[string]{}
+val.SetScanNull(presence.ScanNullAsUnset)
 ```
 
 ## Why Use This Library?
@@ -165,12 +165,12 @@ type User struct {
 // {"name":{"String":"John","Valid":true},"age":{"Int64":30,"Valid":true}}
 ```
 
-### With `nullable`
+### With `presence`
 
 ```go
 type User struct {
-    Name nullable.Of[string] `json:"name"`
-    Age  nullable.Of[int]    `json:"age"`
+    Name presence.Of[string] `json:"name"`
+    Age  presence.Of[int]    `json:"age"`
 }
 
 // JSON output:
@@ -189,25 +189,25 @@ package main
 import (
     "encoding/json"
     "fmt"
-    "github.com/pivaldi/nullable"
+    "github.com/pivaldi/presence"
 )
 
 type User struct {
-    ID       nullable.Of[int]    `json:"id"`
-    Name     nullable.Of[string] `json:"name"`
-    Email    nullable.Of[string] `json:"email"`
-    Age      nullable.Of[int]    `json:"age"`
-    IsActive nullable.Of[bool]   `json:"isActive"`
+    ID       presence.Of[int]    `json:"id"`
+    Name     presence.Of[string] `json:"name"`
+    Email    presence.Of[string] `json:"email"`
+    Age      presence.Of[int]    `json:"age"`
+    IsActive presence.Of[bool]   `json:"isActive"`
 }
 
 func main() {
     // Create user with some null fields
     user := User{
-        ID:       nullable.FromValue(1),
-        Name:     nullable.FromValue("John Doe"),
-        Email:    nullable.Null[string](), // Null email
-        Age:      nullable.FromValue(30),
-        IsActive: nullable.FromValue(true),
+        ID:       presence.FromValue(1),
+        Name:     presence.FromValue("John Doe"),
+        Email:    presence.Null[string](), // Null email
+        Age:      presence.FromValue(30),
+        IsActive: presence.FromValue(true),
     }
 
     // Marshal to JSON
@@ -233,24 +233,24 @@ func main() {
 import (
     "database/sql"
     "time"
-    "github.com/pivaldi/nullable"
+    "github.com/pivaldi/presence"
     _ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type Article struct {
     ID          int64                  `db:"id"`
-    Title       nullable.Of[string]    `db:"title"`
-    Content     nullable.Of[string]    `db:"content"`
-    PublishedAt nullable.Of[time.Time] `db:"published_at"`
-    AuthorID    nullable.Of[int64]     `db:"author_id"`
+    Title       presence.Of[string]    `db:"title"`
+    Content     presence.Of[string]    `db:"content"`
+    PublishedAt presence.Of[time.Time] `db:"published_at"`
+    AuthorID    presence.Of[int64]     `db:"author_id"`
 }
 
 func insertArticle(db *sql.DB) error {
     article := Article{
-        Title:       nullable.FromValue("My Article"),
-        Content:     nullable.FromValue("Article content here..."),
-        PublishedAt: nullable.FromValue(time.Now()),
-        AuthorID:    nullable.Null[int64](), // Anonymous article
+        Title:       presence.FromValue("My Article"),
+        Content:     presence.FromValue("Article content here..."),
+        PublishedAt: presence.FromValue(time.Now()),
+        AuthorID:    presence.Null[int64](), // Anonymous article
     }
 
     query := `
@@ -310,8 +310,8 @@ type Metadata struct {
 
 type Document struct {
     ID       int64                   `db:"id"`
-    Title    nullable.Of[string]     `db:"title"`
-    Metadata nullable.Of[Metadata]   `db:"metadata"` // Stored as JSONB
+    Title    presence.Of[string]     `db:"title"`
+    Metadata presence.Of[Metadata]   `db:"metadata"` // Stored as JSONB
 }
 
 func insertDocument(db *sql.DB) error {
@@ -322,8 +322,8 @@ func insertDocument(db *sql.DB) error {
     }
 
     doc := Document{
-        Title:    nullable.FromValue("Go Nullable Guide"),
-        Metadata: nullable.FromValue(meta),
+        Title:    presence.FromValue("Go Presence Guide"),
+        Metadata: presence.FromValue(meta),
     }
 
     query := `INSERT INTO documents (title, metadata) VALUES ($1, $2) RETURNING id`
@@ -337,34 +337,34 @@ Use types directly without any wrapper - the library handles them automatically:
 
 ```go
 type Address struct {
-    Street  nullable.Of[string] `json:"street"`
-    City    nullable.Of[string] `json:"city"`
-    ZipCode nullable.Of[string] `json:"zipCode"`
+    Street  presence.Of[string] `json:"street"`
+    City    presence.Of[string] `json:"city"`
+    ZipCode presence.Of[string] `json:"zipCode"`
 }
 
 type Profile struct {
-    Bio     nullable.Of[string]  `json:"bio"`
-    Website nullable.Of[string]  `json:"website"`
-    Address nullable.Of[Address] `json:"address"`
+    Bio     presence.Of[string]  `json:"bio"`
+    Website presence.Of[string]  `json:"website"`
+    Address presence.Of[Address] `json:"address"`
 }
 
 type User struct {
-    Username nullable.Of[string]  `json:"username"`
-    Email    nullable.Of[string]  `json:"email"`
-    Profile  nullable.Of[Profile] `json:"profile"`
+    Username presence.Of[string]  `json:"username"`
+    Email    presence.Of[string]  `json:"email"`
+    Profile  presence.Of[Profile] `json:"profile"`
 }
 
 func main() {
     user := User{
-        Username: nullable.FromValue("johndoe"),
-        Email:    nullable.FromValue("john@example.com"),
-        Profile: nullable.FromValue(Profile{
-            Bio:     nullable.FromValue("Software Developer"),
-            Website: nullable.FromValue("https://johndoe.com"),
-            Address: nullable.FromValue(Address{
-                Street:  nullable.FromValue("123 Main St"),
-                City:    nullable.FromValue("New York"),
-                ZipCode: nullable.FromValue("10001"),
+        Username: presence.FromValue("johndoe"),
+        Email:    presence.FromValue("john@example.com"),
+        Profile: presence.FromValue(Profile{
+            Bio:     presence.FromValue("Software Developer"),
+            Website: presence.FromValue("https://johndoe.com"),
+            Address: presence.FromValue(Address{
+                Street:  presence.FromValue("123 Main St"),
+                City:    presence.FromValue("New York"),
+                ZipCode: presence.FromValue("10001"),
             }),
         }),
     }
@@ -408,30 +408,30 @@ func (pn *PhoneNumber) Scan(v any) error {
 
 // Now PhoneNumber will be stored as string, not JSON
 type Contact struct {
-    Email nullable.Of[string]      `db:"email"`
-    Phone nullable.Of[PhoneNumber] `db:"phone"` // Stored as string, not JSON
+    Email presence.Of[string]      `db:"email"`
+    Phone presence.Of[PhoneNumber] `db:"phone"` // Stored as string, not JSON
 }
 ```
 
 ## API Reference
 
-### Creating Nullable Values
+### Creating Presence Values
 
 ```go
 // From a value
-name := nullable.FromValue("John")
+name := presence.FromValue("John")
 
 // Explicitly null
-email := nullable.Null[string]()
+email := presence.Null[string]()
 
 // From a pointer (nil pointer becomes null)
-value := nullable.FromPtr(ptr) // Returns null if ptr is nil
+value := presence.FromPtr(ptr) // Returns null if ptr is nil
 
 // From a boolean condition
-value := nullable.FromBool("value", ok) // Returns null if ok is false
+value := presence.FromBool("value", ok) // Returns null if ok is false
 
 // Using SetValueP
-var val nullable.Of[string]
+var val presence.Of[string]
 val.SetValueP(ptr) // Sets to null if ptr is nil
 ```
 
@@ -463,7 +463,7 @@ ptr := value.Ptr()              // Returns *T (nil if null/unset)
 ### Setting Values
 
 ```go
-var value nullable.Of[string]
+var value presence.Of[string]
 
 // Set a value
 value.SetValue("hello")
@@ -486,7 +486,7 @@ value.Unset()
 data, err := json.Marshal(value)
 
 // Unmarshal
-var value nullable.Of[string]
+var value presence.Of[string]
 err := json.Unmarshal([]byte(`"hello"`), &value)
 
 // Unmarshal null
@@ -498,30 +498,30 @@ err := json.Unmarshal([]byte(`null`), &value)
 
 ```go
 // Map - transform the value (package-level function due to Go generics limitations)
-age := nullable.FromValue(25)
-ageStr := nullable.Map(age, func(a int) string {
+age := presence.FromValue(25)
+ageStr := presence.Map(age, func(a int) string {
     return fmt.Sprintf("%d years old", a)
 })
 // ageStr contains "25 years old"
 
 // MapOr - transform or return default
-result := nullable.MapOr(age, "unknown", func(a int) string {
+result := presence.MapOr(age, "unknown", func(a int) string {
     return fmt.Sprintf("%d years old", a)
 })
 
-// FlatMap - transform to another nullable
-user := nullable.FlatMap(userID, func(id int) nullable.Of[User] {
-    return fetchUser(id) // returns nullable.Of[User]
+// FlatMap - transform to another presence
+user := presence.FlatMap(userID, func(id int) presence.Of[User] {
+    return fetchUser(id) // returns presence.Of[User]
 })
 
 // Filter - keep value only if predicate passes
-adult := nullable.Filter(age, func(a int) bool {
+adult := presence.Filter(age, func(a int) bool {
     return a >= 18
 })
 // Returns null if age < 18
 
 // Or - return first non-null value
-name := nullable.Or(preferredName, displayName, defaultName)
+name := presence.Or(preferredName, displayName, defaultName)
 ```
 
 ## Testing
@@ -549,7 +549,7 @@ Run only unit tests (no database required):
 
 ```bash
 cd tests
-go test -run 'TestMarshal|TestUnmarshal|TestNullableEdgeCases' -v
+go test -run 'TestMarshal|TestUnmarshal|TestPresenceEdgeCases' -v
 ```
 
 ## Examples
@@ -559,31 +559,31 @@ go test -run 'TestMarshal|TestUnmarshal|TestNullableEdgeCases' -v
 For automatic model generation from database schemas using [gorm.io/gen](https://github.com/go-gorm/gen), see the example in [`examples/gorm-gen/main.go`](examples/gorm-gen/main.go).
 
 The example demonstrates:
-- Configuring `gen.Config` with `WithNullableNameStrategy` to wrap nullable fields as `nullable.Of[T]`
+- Configuring `gen.Config` with `WithPresenceNameStrategy` to wrap presence fields as `presence.Of[T]`
 - Custom type mappings for PostgreSQL types (json, jsonb, uuid, date)
 - Adding required import paths for generated code
 
 Key configuration snippet:
 ```go
 config := gen.Config{
-    FieldNullable: true,
+    FieldPresence: true,
     // ... other config
 }
 
-// Wrap nullable fields with nullable.Of[T]
-config.WithNullableNameStrategy(func(fieldType string) string {
-    return fmt.Sprintf("nullable.Of[%s]", fieldType)
+// Wrap presence fields with presence.Of[T]
+config.WithPresenceNameStrategy(func(fieldType string) string {
+    return fmt.Sprintf("presence.Of[%s]", fieldType)
 })
 
-// Add import for nullable package
-config.WithImportPkgPath("github.com/pivaldi/nullable")
+// Add import for presence package
+config.WithImportPkgPath("github.com/pivaldi/presence")
 ```
 
 ## Comparison with Alternatives
 
-| Feature | `nullable` | `aarondl/opt` | `lomsa-dev/gonull` | `database/sql.Null*` | `guregu/null.v4` |
+| Feature | `presence` | `aarondl/opt` | `lomsa-dev/gonull` | `database/sql.Null*` | `guregu/null.v4` |
 |---------|-----------|---------------|-------------------|---------------------|------------------|
-| Generic (any type) | ✅ `Of[T any]` | ✅ `Val[T any]` | ✅ `Nullable[T]` | ❌ (separate type per kind) | ❌ (separate type per kind) |
+| Generic (any type) | ✅ `Of[T any]` | ✅ `Val[T any]` | ✅ `Presence[T]` | ❌ (separate type per kind) | ❌ (separate type per kind) |
 | Clean JSON output | ✅ `null` | ✅ `null` | ✅ `null` | ❌ `{"Valid":false}` | ✅ `null` |
 | 3-state model | ✅ (unset/null/value) | ✅ (unset/null/value) | ❌ (null/value only) | ❌ | ⚠️ Limited |
 | PostgreSQL JSON/JSONB | ✅ Optimized | ✅ Generic | ❌ | ❌ | ⚠️ Limited |

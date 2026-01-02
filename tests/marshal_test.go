@@ -7,42 +7,42 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pivaldi/nullable"
+	"github.com/pivaldi/presence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMarshalJSON_NullValues(t *testing.T) {
 	t.Run("null string", func(t *testing.T) {
-		n := nullable.Null[string]()
+		n := presence.Null[string]()
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("null"), data)
 	})
 
 	t.Run("null int", func(t *testing.T) {
-		n := nullable.Null[int]()
+		n := presence.Null[int]()
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("null"), data)
 	})
 
 	t.Run("null bool", func(t *testing.T) {
-		n := nullable.Null[bool]()
+		n := presence.Null[bool]()
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("null"), data)
 	})
 
 	t.Run("null float64", func(t *testing.T) {
-		n := nullable.Null[float64]()
+		n := presence.Null[float64]()
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("null"), data)
 	})
 
 	t.Run("null UUID", func(t *testing.T) {
-		n := nullable.Null[uuid.UUID]()
+		n := presence.Null[uuid.UUID]()
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("null"), data)
@@ -51,91 +51,91 @@ func TestMarshalJSON_NullValues(t *testing.T) {
 
 func TestMarshalJSON_PrimitiveTypes(t *testing.T) {
 	t.Run("string value", func(t *testing.T) {
-		n := nullable.FromValue("hello world")
+		n := presence.FromValue("hello world")
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte(`"hello world"`), data)
 	})
 
 	t.Run("empty string", func(t *testing.T) {
-		n := nullable.FromValue("")
+		n := presence.FromValue("")
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte(`""`), data)
 	})
 
 	t.Run("int value", func(t *testing.T) {
-		n := nullable.FromValue(42)
+		n := presence.FromValue(42)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("42"), data)
 	})
 
 	t.Run("int16 value", func(t *testing.T) {
-		n := nullable.FromValue(int16(123))
+		n := presence.FromValue(int16(123))
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("123"), data)
 	})
 
 	t.Run("int32 value", func(t *testing.T) {
-		n := nullable.FromValue(int32(456))
+		n := presence.FromValue(int32(456))
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("456"), data)
 	})
 
 	t.Run("int64 value", func(t *testing.T) {
-		n := nullable.FromValue(int64(789))
+		n := presence.FromValue(int64(789))
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("789"), data)
 	})
 
 	t.Run("zero int", func(t *testing.T) {
-		n := nullable.FromValue(0)
+		n := presence.FromValue(0)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("0"), data)
 	})
 
 	t.Run("negative int", func(t *testing.T) {
-		n := nullable.FromValue(-42)
+		n := presence.FromValue(-42)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("-42"), data)
 	})
 
 	t.Run("bool true", func(t *testing.T) {
-		n := nullable.FromValue(true)
+		n := presence.FromValue(true)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("true"), data)
 	})
 
 	t.Run("bool false", func(t *testing.T) {
-		n := nullable.FromValue(false)
+		n := presence.FromValue(false)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("false"), data)
 	})
 
 	t.Run("float64 value", func(t *testing.T) {
-		n := nullable.FromValue(3.14159)
+		n := presence.FromValue(3.14159)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("3.14159"), data)
 	})
 
 	t.Run("float64 zero", func(t *testing.T) {
-		n := nullable.FromValue(0.0)
+		n := presence.FromValue(0.0)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("0"), data)
 	})
 
 	t.Run("float64 negative", func(t *testing.T) {
-		n := nullable.FromValue(-2.5)
+		n := presence.FromValue(-2.5)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("-2.5"), data)
@@ -144,21 +144,21 @@ func TestMarshalJSON_PrimitiveTypes(t *testing.T) {
 
 func TestMarshalJSON_SpecialFloatValues(t *testing.T) {
 	t.Run("float64 NaN", func(t *testing.T) {
-		n := nullable.FromValue(math.NaN())
+		n := presence.FromValue(math.NaN())
 		_, err := n.MarshalJSON()
 		// JSON doesn't support NaN, so this should error
 		assert.Error(t, err)
 	})
 
 	t.Run("float64 positive infinity", func(t *testing.T) {
-		n := nullable.FromValue(math.Inf(1))
+		n := presence.FromValue(math.Inf(1))
 		_, err := n.MarshalJSON()
 		// JSON doesn't support Inf, so this should error
 		assert.Error(t, err)
 	})
 
 	t.Run("float64 negative infinity", func(t *testing.T) {
-		n := nullable.FromValue(math.Inf(-1))
+		n := presence.FromValue(math.Inf(-1))
 		_, err := n.MarshalJSON()
 		// JSON doesn't support -Inf, so this should error
 		assert.Error(t, err)
@@ -168,14 +168,14 @@ func TestMarshalJSON_SpecialFloatValues(t *testing.T) {
 func TestMarshalJSON_UUID(t *testing.T) {
 	t.Run("valid UUID", func(t *testing.T) {
 		testUUID := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
-		n := nullable.FromValue(testUUID)
+		n := presence.FromValue(testUUID)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte(`"550e8400-e29b-41d4-a716-446655440000"`), data)
 	})
 
 	t.Run("zero UUID", func(t *testing.T) {
-		n := nullable.FromValue(uuid.UUID{})
+		n := presence.FromValue(uuid.UUID{})
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte(`"00000000-0000-0000-0000-000000000000"`), data)
@@ -185,7 +185,7 @@ func TestMarshalJSON_UUID(t *testing.T) {
 func TestMarshalJSON_JSONType(t *testing.T) {
 	t.Run("simple map", func(t *testing.T) {
 		obj := map[string]any{"key": "value", "number": 42}
-		n := nullable.FromValue(obj)
+		n := presence.FromValue(obj)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		// Can't assert exact JSON due to map ordering, so unmarshal and compare
@@ -202,7 +202,7 @@ func TestMarshalJSON_JSONType(t *testing.T) {
 				"inner": "value",
 			},
 		}
-		n := nullable.FromValue(obj)
+		n := presence.FromValue(obj)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		var result map[string]any
@@ -214,7 +214,7 @@ func TestMarshalJSON_JSONType(t *testing.T) {
 
 	t.Run("array", func(t *testing.T) {
 		obj := []any{1, 2, 3, "four"}
-		n := nullable.FromValue(obj)
+		n := presence.FromValue(obj)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.JSONEq(t, `[1,2,3,"four"]`, string(data))
@@ -223,7 +223,7 @@ func TestMarshalJSON_JSONType(t *testing.T) {
 
 func TestUnmarshalJSON_NullValues(t *testing.T) {
 	t.Run("null keyword to string", func(t *testing.T) {
-		var n nullable.Of[string]
+		var n presence.Of[string]
 		err := n.UnmarshalJSON([]byte("null"))
 		require.NoError(t, err)
 		assert.True(t, n.IsNull())
@@ -231,21 +231,21 @@ func TestUnmarshalJSON_NullValues(t *testing.T) {
 	})
 
 	t.Run("null keyword to int", func(t *testing.T) {
-		var n nullable.Of[int]
+		var n presence.Of[int]
 		err := n.UnmarshalJSON([]byte("null"))
 		require.NoError(t, err)
 		assert.True(t, n.IsNull())
 	})
 
 	t.Run("nil byte slice", func(t *testing.T) {
-		var n nullable.Of[string]
+		var n presence.Of[string]
 		err := n.UnmarshalJSON(nil)
 		require.NoError(t, err)
 		assert.True(t, n.IsNull())
 	})
 
 	t.Run("null to previously set value", func(t *testing.T) {
-		n := nullable.FromValue("previous value")
+		n := presence.FromValue("previous value")
 		err := n.UnmarshalJSON([]byte("null"))
 		require.NoError(t, err)
 		assert.True(t, n.IsNull())
@@ -255,7 +255,7 @@ func TestUnmarshalJSON_NullValues(t *testing.T) {
 
 func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	t.Run("string value", func(t *testing.T) {
-		var n nullable.Of[string]
+		var n presence.Of[string]
 		err := n.UnmarshalJSON([]byte(`"hello world"`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -263,7 +263,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("empty string", func(t *testing.T) {
-		var n nullable.Of[string]
+		var n presence.Of[string]
 		err := n.UnmarshalJSON([]byte(`""`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -271,7 +271,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("string with quotes", func(t *testing.T) {
-		var n nullable.Of[string]
+		var n presence.Of[string]
 		err := n.UnmarshalJSON([]byte(`"say \"hello\""`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -279,7 +279,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("int value", func(t *testing.T) {
-		var n nullable.Of[int]
+		var n presence.Of[int]
 		err := n.UnmarshalJSON([]byte("42"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -287,7 +287,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("int16 value", func(t *testing.T) {
-		var n nullable.Of[int16]
+		var n presence.Of[int16]
 		err := n.UnmarshalJSON([]byte("123"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -295,7 +295,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("int32 value", func(t *testing.T) {
-		var n nullable.Of[int32]
+		var n presence.Of[int32]
 		err := n.UnmarshalJSON([]byte("456"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -303,7 +303,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("int64 value", func(t *testing.T) {
-		var n nullable.Of[int64]
+		var n presence.Of[int64]
 		err := n.UnmarshalJSON([]byte("789"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -311,7 +311,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("zero int", func(t *testing.T) {
-		var n nullable.Of[int]
+		var n presence.Of[int]
 		err := n.UnmarshalJSON([]byte("0"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -319,7 +319,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("negative int", func(t *testing.T) {
-		var n nullable.Of[int]
+		var n presence.Of[int]
 		err := n.UnmarshalJSON([]byte("-42"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -327,7 +327,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("bool true", func(t *testing.T) {
-		var n nullable.Of[bool]
+		var n presence.Of[bool]
 		err := n.UnmarshalJSON([]byte("true"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -335,7 +335,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("bool false", func(t *testing.T) {
-		var n nullable.Of[bool]
+		var n presence.Of[bool]
 		err := n.UnmarshalJSON([]byte("false"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -343,7 +343,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("float64 value", func(t *testing.T) {
-		var n nullable.Of[float64]
+		var n presence.Of[float64]
 		err := n.UnmarshalJSON([]byte("3.14159"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -351,7 +351,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("float64 zero", func(t *testing.T) {
-		var n nullable.Of[float64]
+		var n presence.Of[float64]
 		err := n.UnmarshalJSON([]byte("0.0"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -359,7 +359,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("float64 negative", func(t *testing.T) {
-		var n nullable.Of[float64]
+		var n presence.Of[float64]
 		err := n.UnmarshalJSON([]byte("-2.5"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -367,7 +367,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 	})
 
 	t.Run("float64 scientific notation", func(t *testing.T) {
-		var n nullable.Of[float64]
+		var n presence.Of[float64]
 		err := n.UnmarshalJSON([]byte("1.23e-4"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -377,7 +377,7 @@ func TestUnmarshalJSON_PrimitiveTypes(t *testing.T) {
 
 func TestUnmarshalJSON_UUID(t *testing.T) {
 	t.Run("valid UUID", func(t *testing.T) {
-		var n nullable.Of[uuid.UUID]
+		var n presence.Of[uuid.UUID]
 		err := n.UnmarshalJSON([]byte(`"550e8400-e29b-41d4-a716-446655440000"`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -386,7 +386,7 @@ func TestUnmarshalJSON_UUID(t *testing.T) {
 	})
 
 	t.Run("zero UUID", func(t *testing.T) {
-		var n nullable.Of[uuid.UUID]
+		var n presence.Of[uuid.UUID]
 		err := n.UnmarshalJSON([]byte(`"00000000-0000-0000-0000-000000000000"`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -394,7 +394,7 @@ func TestUnmarshalJSON_UUID(t *testing.T) {
 	})
 
 	t.Run("invalid UUID format", func(t *testing.T) {
-		var n nullable.Of[uuid.UUID]
+		var n presence.Of[uuid.UUID]
 		err := n.UnmarshalJSON([]byte(`"not-a-uuid"`))
 		assert.Error(t, err)
 	})
@@ -402,37 +402,37 @@ func TestUnmarshalJSON_UUID(t *testing.T) {
 
 func TestUnmarshalJSON_InvalidJSON(t *testing.T) {
 	t.Run("invalid JSON for string", func(t *testing.T) {
-		var n nullable.Of[string]
+		var n presence.Of[string]
 		err := n.UnmarshalJSON([]byte(`not valid json`))
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid JSON for int", func(t *testing.T) {
-		var n nullable.Of[int]
+		var n presence.Of[int]
 		err := n.UnmarshalJSON([]byte(`"not a number"`))
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid JSON for bool", func(t *testing.T) {
-		var n nullable.Of[bool]
+		var n presence.Of[bool]
 		err := n.UnmarshalJSON([]byte(`"not a bool"`))
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid JSON for float", func(t *testing.T) {
-		var n nullable.Of[float64]
+		var n presence.Of[float64]
 		err := n.UnmarshalJSON([]byte(`"not a float"`))
 		assert.Error(t, err)
 	})
 
 	t.Run("number overflow for int16", func(t *testing.T) {
-		var n nullable.Of[int16]
+		var n presence.Of[int16]
 		err := n.UnmarshalJSON([]byte("100000"))
 		assert.Error(t, err)
 	})
 
 	t.Run("number overflow for int32", func(t *testing.T) {
-		var n nullable.Of[int32]
+		var n presence.Of[int32]
 		err := n.UnmarshalJSON([]byte("10000000000"))
 		assert.Error(t, err)
 	})
@@ -440,7 +440,7 @@ func TestUnmarshalJSON_InvalidJSON(t *testing.T) {
 
 func TestUnmarshalJSON_JSONType(t *testing.T) {
 	t.Run("simple map", func(t *testing.T) {
-		var n nullable.Of[any]
+		var n presence.Of[any]
 		err := n.UnmarshalJSON([]byte(`{"key":"value","number":42}`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -450,7 +450,7 @@ func TestUnmarshalJSON_JSONType(t *testing.T) {
 	})
 
 	t.Run("nested structure", func(t *testing.T) {
-		var n nullable.Of[any]
+		var n presence.Of[any]
 		err := n.UnmarshalJSON([]byte(`{"nested":{"inner":"value"}}`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -460,7 +460,7 @@ func TestUnmarshalJSON_JSONType(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
-		var n nullable.Of[any]
+		var n presence.Of[any]
 		err := n.UnmarshalJSON([]byte(`[1,2,3,"four"]`))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -473,66 +473,66 @@ func TestUnmarshalJSON_JSONType(t *testing.T) {
 
 func TestMarshalUnmarshal_RoundTrip(t *testing.T) {
 	t.Run("string round trip", func(t *testing.T) {
-		original := nullable.FromValue("test value")
+		original := presence.FromValue("test value")
 		data, err := original.MarshalJSON()
 		require.NoError(t, err)
 
-		var restored nullable.Of[string]
+		var restored presence.Of[string]
 		err = restored.UnmarshalJSON(data)
 		require.NoError(t, err)
 		assert.Equal(t, *original.GetValue(), *restored.GetValue())
 	})
 
 	t.Run("int round trip", func(t *testing.T) {
-		original := nullable.FromValue(42)
+		original := presence.FromValue(42)
 		data, err := original.MarshalJSON()
 		require.NoError(t, err)
 
-		var restored nullable.Of[int]
+		var restored presence.Of[int]
 		err = restored.UnmarshalJSON(data)
 		require.NoError(t, err)
 		assert.Equal(t, *original.GetValue(), *restored.GetValue())
 	})
 
 	t.Run("bool round trip", func(t *testing.T) {
-		original := nullable.FromValue(true)
+		original := presence.FromValue(true)
 		data, err := original.MarshalJSON()
 		require.NoError(t, err)
 
-		var restored nullable.Of[bool]
+		var restored presence.Of[bool]
 		err = restored.UnmarshalJSON(data)
 		require.NoError(t, err)
 		assert.Equal(t, *original.GetValue(), *restored.GetValue())
 	})
 
 	t.Run("float64 round trip", func(t *testing.T) {
-		original := nullable.FromValue(3.14159)
+		original := presence.FromValue(3.14159)
 		data, err := original.MarshalJSON()
 		require.NoError(t, err)
 
-		var restored nullable.Of[float64]
+		var restored presence.Of[float64]
 		err = restored.UnmarshalJSON(data)
 		require.NoError(t, err)
 		assert.Equal(t, *original.GetValue(), *restored.GetValue())
 	})
 
 	t.Run("UUID round trip", func(t *testing.T) {
-		original := nullable.FromValue(uuid.New())
+		original := presence.FromValue(uuid.New())
 		data, err := original.MarshalJSON()
 		require.NoError(t, err)
 
-		var restored nullable.Of[uuid.UUID]
+		var restored presence.Of[uuid.UUID]
 		err = restored.UnmarshalJSON(data)
 		require.NoError(t, err)
 		assert.Equal(t, *original.GetValue(), *restored.GetValue())
 	})
 
 	t.Run("null round trip", func(t *testing.T) {
-		original := nullable.Null[string]()
+		original := presence.Null[string]()
 		data, err := original.MarshalJSON()
 		require.NoError(t, err)
 
-		var restored nullable.Of[string]
+		var restored presence.Of[string]
 		err = restored.UnmarshalJSON(data)
 		require.NoError(t, err)
 		assert.True(t, restored.IsNull())
@@ -540,11 +540,11 @@ func TestMarshalUnmarshal_RoundTrip(t *testing.T) {
 
 	t.Run("JSON type round trip", func(t *testing.T) {
 		obj := map[string]any{"key": "value", "number": float64(42)}
-		original := nullable.FromValue(obj)
+		original := presence.FromValue(obj)
 		data, err := original.MarshalJSON()
 		require.NoError(t, err)
 
-		var restored nullable.Of[any]
+		var restored presence.Of[any]
 		err = restored.UnmarshalJSON(data)
 		require.NoError(t, err)
 		result := (*restored.GetValue()).(map[string]any)
@@ -555,18 +555,18 @@ func TestMarshalUnmarshal_RoundTrip(t *testing.T) {
 
 func TestMarshalUnmarshal_InStructs(t *testing.T) {
 	type TestStruct struct {
-		Name   nullable.Of[string]  `json:"name"`
-		Age    nullable.Of[int]     `json:"age"`
-		Active nullable.Of[bool]    `json:"active"`
-		Score  nullable.Of[float64] `json:"score"`
+		Name   presence.Of[string]  `json:"name"`
+		Age    presence.Of[int]     `json:"age"`
+		Active presence.Of[bool]    `json:"active"`
+		Score  presence.Of[float64] `json:"score"`
 	}
 
 	t.Run("struct with all values", func(t *testing.T) {
 		original := TestStruct{
-			Name:   nullable.FromValue("John"),
-			Age:    nullable.FromValue(30),
-			Active: nullable.FromValue(true),
-			Score:  nullable.FromValue(95.5),
+			Name:   presence.FromValue("John"),
+			Age:    presence.FromValue(30),
+			Active: presence.FromValue(true),
+			Score:  presence.FromValue(95.5),
 		}
 
 		data, err := json.Marshal(original)
@@ -584,10 +584,10 @@ func TestMarshalUnmarshal_InStructs(t *testing.T) {
 
 	t.Run("struct with null values", func(t *testing.T) {
 		original := TestStruct{
-			Name:   nullable.Null[string](),
-			Age:    nullable.Null[int](),
-			Active: nullable.Null[bool](),
-			Score:  nullable.Null[float64](),
+			Name:   presence.Null[string](),
+			Age:    presence.Null[int](),
+			Active: presence.Null[bool](),
+			Score:  presence.Null[float64](),
 		}
 
 		data, err := json.Marshal(original)
@@ -606,10 +606,10 @@ func TestMarshalUnmarshal_InStructs(t *testing.T) {
 
 	t.Run("struct with mixed null and non-null", func(t *testing.T) {
 		original := TestStruct{
-			Name:   nullable.FromValue("Jane"),
-			Age:    nullable.Null[int](),
-			Active: nullable.FromValue(false),
-			Score:  nullable.Null[float64](),
+			Name:   presence.FromValue("Jane"),
+			Age:    presence.Null[int](),
+			Active: presence.FromValue(false),
+			Score:  presence.Null[float64](),
 		}
 
 		data, err := json.Marshal(original)
@@ -628,21 +628,21 @@ func TestMarshalUnmarshal_InStructs(t *testing.T) {
 
 func TestUnmarshalJSON_OverwritingExisting(t *testing.T) {
 	t.Run("overwrite value with new value", func(t *testing.T) {
-		n := nullable.FromValue("original")
+		n := presence.FromValue("original")
 		err := n.UnmarshalJSON([]byte(`"new value"`))
 		require.NoError(t, err)
 		assert.Equal(t, "new value", *n.GetValue())
 	})
 
 	t.Run("overwrite value with null", func(t *testing.T) {
-		n := nullable.FromValue(42)
+		n := presence.FromValue(42)
 		err := n.UnmarshalJSON([]byte("null"))
 		require.NoError(t, err)
 		assert.True(t, n.IsNull())
 	})
 
 	t.Run("overwrite null with value", func(t *testing.T) {
-		n := nullable.Null[int]()
+		n := presence.Null[int]()
 		err := n.UnmarshalJSON([]byte("123"))
 		require.NoError(t, err)
 		assert.False(t, n.IsNull())
@@ -653,111 +653,111 @@ func TestUnmarshalJSON_OverwritingExisting(t *testing.T) {
 func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 	// Define complex nested structures
 	type Address struct {
-		Street     nullable.Of[string]  `json:"street"`
-		City       nullable.Of[string]  `json:"city"`
-		PostalCode nullable.Of[string]  `json:"postalCode"`
-		Country    nullable.Of[string]  `json:"country"`
-		Verified   nullable.Of[bool]    `json:"verified"`
-		Lat        nullable.Of[float64] `json:"lat"`
-		Lng        nullable.Of[float64] `json:"lng"`
+		Street     presence.Of[string]  `json:"street"`
+		City       presence.Of[string]  `json:"city"`
+		PostalCode presence.Of[string]  `json:"postalCode"`
+		Country    presence.Of[string]  `json:"country"`
+		Verified   presence.Of[bool]    `json:"verified"`
+		Lat        presence.Of[float64] `json:"lat"`
+		Lng        presence.Of[float64] `json:"lng"`
 	}
 
 	type ContactInfo struct {
-		Email       nullable.Of[string]  `json:"email"`
-		Phone       nullable.Of[string]  `json:"phone"`
-		Address     nullable.Of[Address] `json:"address"`
-		IsPrimary   nullable.Of[bool]    `json:"isPrimary"`
-		LastUpdated nullable.Of[int64]   `json:"lastUpdated"`
+		Email       presence.Of[string]  `json:"email"`
+		Phone       presence.Of[string]  `json:"phone"`
+		Address     presence.Of[Address] `json:"address"`
+		IsPrimary   presence.Of[bool]    `json:"isPrimary"`
+		LastUpdated presence.Of[int64]   `json:"lastUpdated"`
 	}
 
 	type Metadata struct {
-		Tags        nullable.Of[[]string]          `json:"tags"`
-		Properties  nullable.Of[map[string]string] `json:"properties"`
-		Version     nullable.Of[int]               `json:"version"`
-		IsActive    nullable.Of[bool]              `json:"isActive"`
-		CreatedBy   nullable.Of[string]            `json:"createdBy"`
-		CreatedByID nullable.Of[uuid.UUID]         `json:"createdById"`
+		Tags        presence.Of[[]string]          `json:"tags"`
+		Properties  presence.Of[map[string]string] `json:"properties"`
+		Version     presence.Of[int]               `json:"version"`
+		IsActive    presence.Of[bool]              `json:"isActive"`
+		CreatedBy   presence.Of[string]            `json:"createdBy"`
+		CreatedByID presence.Of[uuid.UUID]         `json:"createdById"`
 	}
 
 	type Profile struct {
-		Bio         nullable.Of[string]         `json:"bio"`
-		Website     nullable.Of[string]         `json:"website"`
-		AvatarURL   nullable.Of[string]         `json:"avatarUrl"`
-		Contacts    nullable.Of[[]ContactInfo]  `json:"contacts"`
-		Preferences nullable.Of[map[string]any] `json:"preferences"`
-		Metadata    nullable.Of[Metadata]       `json:"metadata"`
-		Score       nullable.Of[float64]        `json:"score"`
-		Level       nullable.Of[int32]          `json:"level"`
+		Bio         presence.Of[string]         `json:"bio"`
+		Website     presence.Of[string]         `json:"website"`
+		AvatarURL   presence.Of[string]         `json:"avatarUrl"`
+		Contacts    presence.Of[[]ContactInfo]  `json:"contacts"`
+		Preferences presence.Of[map[string]any] `json:"preferences"`
+		Metadata    presence.Of[Metadata]       `json:"metadata"`
+		Score       presence.Of[float64]        `json:"score"`
+		Level       presence.Of[int32]          `json:"level"`
 	}
 
 	type User struct {
-		ID          nullable.Of[uuid.UUID]       `json:"id"`
-		Username    nullable.Of[string]          `json:"username"`
-		Email       nullable.Of[string]          `json:"email"`
-		FirstName   nullable.Of[string]          `json:"firstName"`
-		LastName    nullable.Of[string]          `json:"lastName"`
-		Age         nullable.Of[int]             `json:"age"`
-		IsActive    nullable.Of[bool]            `json:"isActive"`
-		Balance     nullable.Of[float64]         `json:"balance"`
-		Profile     nullable.Of[Profile]         `json:"profile"`
-		Roles       nullable.Of[[]string]        `json:"roles"`
-		Permissions nullable.Of[map[string]bool] `json:"permissions"`
-		CreatedAt   nullable.Of[int64]           `json:"createdAt"`
+		ID          presence.Of[uuid.UUID]       `json:"id"`
+		Username    presence.Of[string]          `json:"username"`
+		Email       presence.Of[string]          `json:"email"`
+		FirstName   presence.Of[string]          `json:"firstName"`
+		LastName    presence.Of[string]          `json:"lastName"`
+		Age         presence.Of[int]             `json:"age"`
+		IsActive    presence.Of[bool]            `json:"isActive"`
+		Balance     presence.Of[float64]         `json:"balance"`
+		Profile     presence.Of[Profile]         `json:"profile"`
+		Roles       presence.Of[[]string]        `json:"roles"`
+		Permissions presence.Of[map[string]bool] `json:"permissions"`
+		CreatedAt   presence.Of[int64]           `json:"createdAt"`
 	}
 
 	t.Run("deeply nested structure with all values", func(t *testing.T) {
 		// Create deeply nested structure
 		address := Address{
-			Street:     nullable.FromValue("123 Main St"),
-			City:       nullable.FromValue("New York"),
-			PostalCode: nullable.FromValue("10001"),
-			Country:    nullable.FromValue("USA"),
-			Verified:   nullable.FromValue(true),
-			Lat:        nullable.FromValue(40.7128),
-			Lng:        nullable.FromValue(-74.0060),
+			Street:     presence.FromValue("123 Main St"),
+			City:       presence.FromValue("New York"),
+			PostalCode: presence.FromValue("10001"),
+			Country:    presence.FromValue("USA"),
+			Verified:   presence.FromValue(true),
+			Lat:        presence.FromValue(40.7128),
+			Lng:        presence.FromValue(-74.0060),
 		}
 
 		contact := ContactInfo{
-			Email:       nullable.FromValue("user@example.com"),
-			Phone:       nullable.FromValue("+1-555-0100"),
-			Address:     nullable.FromValue[Address](address),
-			IsPrimary:   nullable.FromValue(true),
-			LastUpdated: nullable.FromValue(int64(1234567890)),
+			Email:       presence.FromValue("user@example.com"),
+			Phone:       presence.FromValue("+1-555-0100"),
+			Address:     presence.FromValue[Address](address),
+			IsPrimary:   presence.FromValue(true),
+			LastUpdated: presence.FromValue(int64(1234567890)),
 		}
 
 		metadata := Metadata{
-			Tags:        nullable.FromValue([]string{"premium", "verified"}),
-			Properties:  nullable.FromValue(map[string]string{"theme": "dark", "language": "en"}),
-			Version:     nullable.FromValue(3),
-			IsActive:    nullable.FromValue(true),
-			CreatedBy:   nullable.FromValue("admin"),
-			CreatedByID: nullable.FromValue(uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")),
+			Tags:        presence.FromValue([]string{"premium", "verified"}),
+			Properties:  presence.FromValue(map[string]string{"theme": "dark", "language": "en"}),
+			Version:     presence.FromValue(3),
+			IsActive:    presence.FromValue(true),
+			CreatedBy:   presence.FromValue("admin"),
+			CreatedByID: presence.FromValue(uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")),
 		}
 
 		profile := Profile{
-			Bio:         nullable.FromValue("Software developer"),
-			Website:     nullable.FromValue("https://example.com"),
-			AvatarURL:   nullable.FromValue("https://example.com/avatar.jpg"),
-			Contacts:    nullable.FromValue([]ContactInfo{contact}),
-			Preferences: nullable.FromValue(map[string]any{"notifications": true, "theme": "dark"}),
-			Metadata:    nullable.FromValue[Metadata](metadata),
-			Score:       nullable.FromValue(98.5),
-			Level:       nullable.FromValue(int32(42)),
+			Bio:         presence.FromValue("Software developer"),
+			Website:     presence.FromValue("https://example.com"),
+			AvatarURL:   presence.FromValue("https://example.com/avatar.jpg"),
+			Contacts:    presence.FromValue([]ContactInfo{contact}),
+			Preferences: presence.FromValue(map[string]any{"notifications": true, "theme": "dark"}),
+			Metadata:    presence.FromValue[Metadata](metadata),
+			Score:       presence.FromValue(98.5),
+			Level:       presence.FromValue(int32(42)),
 		}
 
 		user := User{
-			ID:          nullable.FromValue(uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")),
-			Username:    nullable.FromValue("johndoe"),
-			Email:       nullable.FromValue("john@example.com"),
-			FirstName:   nullable.FromValue("John"),
-			LastName:    nullable.FromValue("Doe"),
-			Age:         nullable.FromValue(30),
-			IsActive:    nullable.FromValue(true),
-			Balance:     nullable.FromValue(1234.56),
-			Profile:     nullable.FromValue(profile),
-			Roles:       nullable.FromValue([]string{"admin", "user"}),
-			Permissions: nullable.FromValue(map[string]bool{"read": true, "write": true, "delete": false}),
-			CreatedAt:   nullable.FromValue(int64(1609459200)),
+			ID:          presence.FromValue(uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")),
+			Username:    presence.FromValue("johndoe"),
+			Email:       presence.FromValue("john@example.com"),
+			FirstName:   presence.FromValue("John"),
+			LastName:    presence.FromValue("Doe"),
+			Age:         presence.FromValue(30),
+			IsActive:    presence.FromValue(true),
+			Balance:     presence.FromValue(1234.56),
+			Profile:     presence.FromValue(profile),
+			Roles:       presence.FromValue([]string{"admin", "user"}),
+			Permissions: presence.FromValue(map[string]bool{"read": true, "write": true, "delete": false}),
+			CreatedAt:   presence.FromValue(int64(1609459200)),
 		}
 
 		// Marshal
@@ -813,46 +813,46 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 	t.Run("deeply nested structure with mixed null values", func(t *testing.T) {
 		// Create structure with some null values at different levels
 		contact := ContactInfo{
-			Email:       nullable.FromValue("contact@example.com"),
-			Phone:       nullable.Null[string](),  // Null phone
-			Address:     nullable.Null[Address](), // Null address
-			IsPrimary:   nullable.FromValue(false),
-			LastUpdated: nullable.FromValue(int64(9876543210)),
+			Email:       presence.FromValue("contact@example.com"),
+			Phone:       presence.Null[string](),  // Null phone
+			Address:     presence.Null[Address](), // Null address
+			IsPrimary:   presence.FromValue(false),
+			LastUpdated: presence.FromValue(int64(9876543210)),
 		}
 
 		metadata := Metadata{
-			Tags:        nullable.FromValue([]string{"new"}),
-			Properties:  nullable.Null[map[string]string](), // Null properties
-			Version:     nullable.FromValue(1),
-			IsActive:    nullable.Null[bool](), // Null isActive
-			CreatedBy:   nullable.FromValue("system"),
-			CreatedByID: nullable.Null[uuid.UUID](), // Null UUID
+			Tags:        presence.FromValue([]string{"new"}),
+			Properties:  presence.Null[map[string]string](), // Null properties
+			Version:     presence.FromValue(1),
+			IsActive:    presence.Null[bool](), // Null isActive
+			CreatedBy:   presence.FromValue("system"),
+			CreatedByID: presence.Null[uuid.UUID](), // Null UUID
 		}
 
 		profile := Profile{
-			Bio:         nullable.Null[string](), // Null bio
-			Website:     nullable.FromValue("https://site.com"),
-			AvatarURL:   nullable.Null[string](), // Null avatar
-			Contacts:    nullable.FromValue([]ContactInfo{contact}),
-			Preferences: nullable.Null[map[string]any](), // Null preferences
-			Metadata:    nullable.FromValue(metadata),
-			Score:       nullable.FromValue(75.0),
-			Level:       nullable.Null[int32](), // Null level
+			Bio:         presence.Null[string](), // Null bio
+			Website:     presence.FromValue("https://site.com"),
+			AvatarURL:   presence.Null[string](), // Null avatar
+			Contacts:    presence.FromValue([]ContactInfo{contact}),
+			Preferences: presence.Null[map[string]any](), // Null preferences
+			Metadata:    presence.FromValue(metadata),
+			Score:       presence.FromValue(75.0),
+			Level:       presence.Null[int32](), // Null level
 		}
 
 		user := User{
-			ID:          nullable.FromValue(uuid.MustParse("abcd1234-e89b-12d3-a456-426614174000")),
-			Username:    nullable.FromValue("janedoe"),
-			Email:       nullable.Null[string](), // Null email
-			FirstName:   nullable.FromValue("Jane"),
-			LastName:    nullable.Null[string](), // Null last name
-			Age:         nullable.FromValue(25),
-			IsActive:    nullable.FromValue(true),
-			Balance:     nullable.Null[float64](), // Null balance
-			Profile:     nullable.FromValue(profile),
-			Roles:       nullable.Null[[]string](), // Null roles
-			Permissions: nullable.FromValue(map[string]bool{"read": true}),
-			CreatedAt:   nullable.FromValue(int64(1609459200)),
+			ID:          presence.FromValue(uuid.MustParse("abcd1234-e89b-12d3-a456-426614174000")),
+			Username:    presence.FromValue("janedoe"),
+			Email:       presence.Null[string](), // Null email
+			FirstName:   presence.FromValue("Jane"),
+			LastName:    presence.Null[string](), // Null last name
+			Age:         presence.FromValue(25),
+			IsActive:    presence.FromValue(true),
+			Balance:     presence.Null[float64](), // Null balance
+			Profile:     presence.FromValue(profile),
+			Roles:       presence.Null[[]string](), // Null roles
+			Permissions: presence.FromValue(map[string]bool{"read": true}),
+			CreatedAt:   presence.FromValue(int64(1609459200)),
 		}
 
 		// Marshal
@@ -895,18 +895,18 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 
 	t.Run("deeply nested structure with all null values", func(t *testing.T) {
 		user := User{
-			ID:          nullable.Null[uuid.UUID](),
-			Username:    nullable.Null[string](),
-			Email:       nullable.Null[string](),
-			FirstName:   nullable.Null[string](),
-			LastName:    nullable.Null[string](),
-			Age:         nullable.Null[int](),
-			IsActive:    nullable.Null[bool](),
-			Balance:     nullable.Null[float64](),
-			Profile:     nullable.Null[Profile](),
-			Roles:       nullable.Null[[]string](),
-			Permissions: nullable.Null[map[string]bool](),
-			CreatedAt:   nullable.Null[int64](),
+			ID:          presence.Null[uuid.UUID](),
+			Username:    presence.Null[string](),
+			Email:       presence.Null[string](),
+			FirstName:   presence.Null[string](),
+			LastName:    presence.Null[string](),
+			Age:         presence.Null[int](),
+			IsActive:    presence.Null[bool](),
+			Balance:     presence.Null[float64](),
+			Profile:     presence.Null[Profile](),
+			Roles:       presence.Null[[]string](),
+			Permissions: presence.Null[map[string]bool](),
+			CreatedAt:   presence.Null[int64](),
 		}
 
 		// Marshal
@@ -944,24 +944,24 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 
 	t.Run("array of complex structures", func(t *testing.T) {
 		contact1 := ContactInfo{
-			Email:       nullable.FromValue("contact1@example.com"),
-			Phone:       nullable.FromValue("+1-555-0101"),
-			IsPrimary:   nullable.FromValue(true),
-			LastUpdated: nullable.FromValue(int64(1000000)),
+			Email:       presence.FromValue("contact1@example.com"),
+			Phone:       presence.FromValue("+1-555-0101"),
+			IsPrimary:   presence.FromValue(true),
+			LastUpdated: presence.FromValue(int64(1000000)),
 		}
 
 		contact2 := ContactInfo{
-			Email:       nullable.FromValue("contact2@example.com"),
-			Phone:       nullable.Null[string](),
-			IsPrimary:   nullable.FromValue(false),
-			LastUpdated: nullable.Null[int64](),
+			Email:       presence.FromValue("contact2@example.com"),
+			Phone:       presence.Null[string](),
+			IsPrimary:   presence.FromValue(false),
+			LastUpdated: presence.Null[int64](),
 		}
 
 		contact3 := ContactInfo{
-			Email:       nullable.Null[string](),
-			Phone:       nullable.Null[string](),
-			IsPrimary:   nullable.Null[bool](),
-			LastUpdated: nullable.Null[int64](),
+			Email:       presence.Null[string](),
+			Phone:       presence.Null[string](),
+			IsPrimary:   presence.Null[bool](),
+			LastUpdated: presence.Null[int64](),
 		}
 
 		contacts := []ContactInfo{contact1, contact2, contact3}
@@ -996,18 +996,18 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		assert.True(t, restored[2].LastUpdated.IsNull())
 	})
 
-	t.Run("map with complex nullable values", func(t *testing.T) {
-		data := map[string]nullable.Of[any]{
-			"user1": nullable.FromValue[any](map[string]any{
+	t.Run("map with complex presence values", func(t *testing.T) {
+		data := map[string]presence.Of[any]{
+			"user1": presence.FromValue[any](map[string]any{
 				"name":   "Alice",
 				"age":    30,
 				"active": true,
 			}),
-			"user2": nullable.FromValue[any](map[string]any{
+			"user2": presence.FromValue[any](map[string]any{
 				"name": "Bob",
 				"age":  25,
 			}),
-			"user3": nullable.Null[any](),
+			"user3": presence.Null[any](),
 		}
 
 		// Marshal
@@ -1016,7 +1016,7 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		require.NotEmpty(t, jsonData)
 
 		// Unmarshal
-		var restored map[string]nullable.Of[any]
+		var restored map[string]presence.Of[any]
 		err = json.Unmarshal(jsonData, &restored)
 		require.NoError(t, err)
 
@@ -1074,7 +1074,7 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		}
 
 		// Level 1 (top)
-		level1 := nullable.FromValue[any](map[string]any{
+		level1 := presence.FromValue[any](map[string]any{
 			"root":  level2,
 			"level": 1,
 			"name":  "top level",
@@ -1086,7 +1086,7 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 		require.NotEmpty(t, data)
 
 		// Unmarshal
-		var restored nullable.Of[any]
+		var restored presence.Of[any]
 		err = json.Unmarshal(data, &restored)
 		require.NoError(t, err)
 
@@ -1123,35 +1123,35 @@ func TestMarshalUnmarshal_ComplexStructures(t *testing.T) {
 
 func TestMarshalJSON_ThreeState(t *testing.T) {
 	t.Run("unset marshals as null", func(t *testing.T) {
-		n := nullable.Of[string]{}
+		n := presence.Of[string]{}
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("null"), data, "unset should marshal as null")
 	})
 
 	t.Run("unset with UnsetSkip has IsZero true", func(t *testing.T) {
-		n := nullable.Of[string]{}
-		n.SetMarshalUnset(nullable.UnsetSkip)
+		n := presence.Of[string]{}
+		n.SetMarshalUnset(presence.UnsetSkip)
 		assert.True(t, n.IsZero(), "unset with UnsetSkip should be zero for omitempty")
 	})
 
 	t.Run("unset with UnsetNull has IsZero false", func(t *testing.T) {
-		n := nullable.Of[string]{}
-		n.SetMarshalUnset(nullable.UnsetNull)
+		n := presence.Of[string]{}
+		n.SetMarshalUnset(presence.UnsetNull)
 		assert.False(t, n.IsZero(), "unset with UnsetNull should not be zero")
 	})
 
 	t.Run("explicit null always returns null", func(t *testing.T) {
-		n := nullable.Null[string]()
-		n.SetMarshalUnset(nullable.UnsetSkip) // should not affect null
+		n := presence.Null[string]()
+		n.SetMarshalUnset(presence.UnsetSkip) // should not affect null
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte("null"), data)
 	})
 
 	t.Run("value returns value regardless of config", func(t *testing.T) {
-		n := nullable.FromValue("test")
-		n.SetMarshalUnset(nullable.UnsetSkip)
+		n := presence.FromValue("test")
+		n.SetMarshalUnset(presence.UnsetSkip)
 		data, err := n.MarshalJSON()
 		require.NoError(t, err)
 		assert.Equal(t, []byte(`"test"`), data)
@@ -1161,13 +1161,13 @@ func TestMarshalJSON_ThreeState(t *testing.T) {
 func TestMarshalJSON_OmitZero(t *testing.T) {
 	// Note: omitzero is a Go 1.24+ feature that uses IsZero() to determine if a field should be omitted
 	type TestStruct struct {
-		Name nullable.Of[string] `json:"name,omitzero"`
-		Age  nullable.Of[int]    `json:"age,omitzero"`
+		Name presence.Of[string] `json:"name,omitzero"`
+		Age  presence.Of[int]    `json:"age,omitzero"`
 	}
 
 	t.Run("unset fields omitted with omitzero", func(t *testing.T) {
 		s := TestStruct{
-			Name: nullable.FromValue("John"),
+			Name: presence.FromValue("John"),
 			// Age left as unset - should be omitted because IsZero() returns true
 		}
 		data, err := json.Marshal(s)
@@ -1177,8 +1177,8 @@ func TestMarshalJSON_OmitZero(t *testing.T) {
 
 	t.Run("null fields included with omitzero", func(t *testing.T) {
 		s := TestStruct{
-			Name: nullable.FromValue("John"),
-			Age:  nullable.Null[int](), // explicitly null - IsZero() returns false
+			Name: presence.FromValue("John"),
+			Age:  presence.Null[int](), // explicitly null - IsZero() returns false
 		}
 		data, err := json.Marshal(s)
 		require.NoError(t, err)
@@ -1187,8 +1187,8 @@ func TestMarshalJSON_OmitZero(t *testing.T) {
 
 	t.Run("value fields included with omitzero", func(t *testing.T) {
 		s := TestStruct{
-			Name: nullable.FromValue("John"),
-			Age:  nullable.FromValue(30),
+			Name: presence.FromValue("John"),
+			Age:  presence.FromValue(30),
 		}
 		data, err := json.Marshal(s)
 		require.NoError(t, err)
@@ -1201,13 +1201,13 @@ func TestMarshalJSON_OmitEmpty(t *testing.T) {
 	// For custom types with MarshalJSON, omitempty checks if the marshaled value is
 	// "null", "false", 0, "", or empty array/map
 	type TestStruct struct {
-		Name nullable.Of[string] `json:"name,omitempty"`
-		Age  nullable.Of[int]    `json:"age,omitempty"`
+		Name presence.Of[string] `json:"name,omitempty"`
+		Age  presence.Of[int]    `json:"age,omitempty"`
 	}
 
 	t.Run("unset fields marshal as null with omitempty", func(t *testing.T) {
 		s := TestStruct{
-			Name: nullable.FromValue("John"),
+			Name: presence.FromValue("John"),
 			// Age left as unset - marshals as null, included in output
 		}
 		data, err := json.Marshal(s)
@@ -1218,8 +1218,8 @@ func TestMarshalJSON_OmitEmpty(t *testing.T) {
 
 	t.Run("null fields included with omitempty", func(t *testing.T) {
 		s := TestStruct{
-			Name: nullable.FromValue("John"),
-			Age:  nullable.Null[int](),
+			Name: presence.FromValue("John"),
+			Age:  presence.Null[int](),
 		}
 		data, err := json.Marshal(s)
 		require.NoError(t, err)
@@ -1229,7 +1229,7 @@ func TestMarshalJSON_OmitEmpty(t *testing.T) {
 
 func TestUnmarshalJSON_ThreeState(t *testing.T) {
 	t.Run("explicit null becomes null state", func(t *testing.T) {
-		var n nullable.Of[string]
+		var n presence.Of[string]
 		err := n.UnmarshalJSON([]byte("null"))
 		require.NoError(t, err)
 		assert.True(t, n.IsNull())
@@ -1239,8 +1239,8 @@ func TestUnmarshalJSON_ThreeState(t *testing.T) {
 
 	t.Run("missing field stays unset", func(t *testing.T) {
 		type TestStruct struct {
-			Name nullable.Of[string] `json:"name"`
-			Age  nullable.Of[int]    `json:"age"`
+			Name presence.Of[string] `json:"name"`
+			Age  presence.Of[int]    `json:"age"`
 		}
 		var s TestStruct
 		err := json.Unmarshal([]byte(`{"name":"John"}`), &s)
@@ -1255,8 +1255,8 @@ func TestUnmarshalJSON_ThreeState(t *testing.T) {
 
 	t.Run("explicit null in JSON becomes null", func(t *testing.T) {
 		type TestStruct struct {
-			Name nullable.Of[string] `json:"name"`
-			Age  nullable.Of[int]    `json:"age"`
+			Name presence.Of[string] `json:"name"`
+			Age  presence.Of[int]    `json:"age"`
 		}
 		var s TestStruct
 		err := json.Unmarshal([]byte(`{"name":"John","age":null}`), &s)
@@ -1267,7 +1267,7 @@ func TestUnmarshalJSON_ThreeState(t *testing.T) {
 	})
 
 	t.Run("value in JSON becomes value", func(t *testing.T) {
-		var n nullable.Of[int]
+		var n presence.Of[int]
 		err := n.UnmarshalJSON([]byte("42"))
 		require.NoError(t, err)
 		assert.False(t, n.IsUnset())
@@ -1283,12 +1283,12 @@ func TestMarshalUnmarshal(t *testing.T) {
 
 	b, err := json.Marshal(obj)
 	t.Run("Marshal nested structs test", func(t *testing.T) {
-		require.NoError(t, err, "Marshaling Nullable data failed")
+		require.NoError(t, err, "Marshaling Presence data failed")
 	})
 
 	t.Run("Unmarshal tests suite", func(t *testing.T) {
 		err = json.Unmarshal(b, &toObj)
-		require.NoError(t, err, "Unmarshaling into Nullable data failed")
+		require.NoError(t, err, "Unmarshaling into Presence data failed")
 
 		for i := range 2 {
 			t.Run("Simple string matching", func(t *testing.T) {
