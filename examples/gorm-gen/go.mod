@@ -1,6 +1,6 @@
 module github.com/pivaldi/presence/examples/gorm-gen
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/testcontainers/testcontainers-go v0.40.0
