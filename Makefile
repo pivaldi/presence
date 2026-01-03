@@ -15,7 +15,7 @@ tidy: ## Tidy Go modules
 
 lint:
 	golangci-lint run
-	gosec ./...
+	gosec -conf .gosec.json ./...
 
 lint-fix:
 	golangci-lint run --fix

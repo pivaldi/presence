@@ -554,9 +554,44 @@ go test -run 'TestMarshal|TestUnmarshal|TestPresenceEdgeCases' -v
 
 ## Examples
 
+### GraphQL Integration (with gqlgen)
+
+For GraphQL APIs using [gqlgen](https://github.com/99designs/gqlgen), see the example in [`examples/gqlgen/`](examples/gqlgen/).
+
+The example demonstrates using `presence.Of[T]` for PATCH mutations with proper 3-state handling:
+
+```go
+// Custom input type with presence fields
+type UpdateUserInput struct {
+    Username presence.Of[string] `json:"username"`
+    Email    presence.Of[string] `json:"email"`
+    Bio      presence.Of[string] `json:"bio"`
+}
+
+// Resolver with 3-state handling
+func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input UpdateUserInput) (*User, error) {
+    user := r.users[id]
+
+    if input.Username.IsSet() {
+        if input.Username.IsNull() {
+            return nil, fmt.Errorf("username cannot be null")
+        }
+        user.Username = input.Username.MustGet()
+    }
+
+    if input.Email.IsSet() {
+        user.Email = input.Email.Ptr() // nil if null, value otherwise
+    }
+
+    return user, nil
+}
+```
+
+Run with: `cd examples/gqlgen && go run .`
+
 ### gorm.io/gen Integration
 
-For automatic model generation from database schemas using [gorm.io/gen](https://github.com/go-gorm/gen), see the example in [`examples/gorm-gen/main.go`](examples/gorm-gen/main.go).
+For automatic model generation from database schemas using [gorm.io/gen](https://github.com/go-gorm/gen), see the example in [`examples/gorm-gen/`](examples/gorm-gen/).
 
 The example demonstrates:
 - Using `WithDataTypeMap` to wrap nullable columns with `presence.Of[T]`

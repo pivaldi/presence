@@ -32,7 +32,9 @@
       "Bash(/usr/local/go/bin/go build ./...)",
       "Bash(/usr/local/go/bin/go build:*)",
       "Bash(/usr/local/go/bin/go mod tidy:*)",
-      "Bash(/usr/local/go/bin/go get:*)"
+      "Bash(/usr/local/go/bin/go get:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(gosec:*)"
     ]
   }
 }
