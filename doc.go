@@ -1,5 +1,6 @@
 /*
-Package presence provides type-safe presence values for Go using generics, designed for seamless JSON marshaling and database operations.
+Package presence provides type-safe presence values for Go using generics, designed for seamless
+JSON marshaling and database operations.
 
 # Overview
 

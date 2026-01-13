@@ -95,11 +95,6 @@ func ExampleOf_json() {
 
 // ExampleOf_threeState demonstrates the three-state model (unset, null, value).
 func ExampleOf_threeState() {
-	type UpdateRequest struct {
-		Name  presence.Of[string] `json:"name,omitempty"`
-		Email presence.Of[string] `json:"email,omitempty"`
-	}
-
 	// Unset field - not touched
 	var unset presence.Of[string]
 	fmt.Println("Unset - IsUnset:", unset.IsUnset())
