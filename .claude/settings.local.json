@@ -34,7 +34,12 @@
       "Bash(/usr/local/go/bin/go mod tidy:*)",
       "Bash(/usr/local/go/bin/go get:*)",
       "Bash(go mod tidy:*)",
-      "Bash(gosec:*)"
+      "Bash(gosec:*)",
+      "Bash(/usr/local/go/bin/go test:*)",
+      "Bash(/usr/local/go/bin/go doc:*)",
+      "Bash(GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH go doc:*)",
+      "Bash(GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH gofmt:*)",
+      "Bash(GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH go test:*)"
     ]
   }
 }
