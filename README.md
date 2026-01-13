@@ -23,13 +23,13 @@ A type-safe presence value library for Go using generics, designed for seamless 
 ## Installation
 
 ```bash
-go get github.com/pivaldi/presence
+go get github.com/pivaldi/presence/v2
 ```
 
 ## Quick Start
 
 ```go
-import "github.com/pivaldi/presence"
+import "github.com/pivaldi/presence/v2"
 
 // Create presence values
 name := presence.FromValue("John Doe")
@@ -189,7 +189,7 @@ package main
 import (
     "encoding/json"
     "fmt"
-    "github.com/pivaldi/presence"
+    "github.com/pivaldi/presence/v2"
 )
 
 type User struct {
@@ -233,7 +233,7 @@ func main() {
 import (
     "database/sql"
     "time"
-    "github.com/pivaldi/presence"
+    "github.com/pivaldi/presence/v2"
     _ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -620,7 +620,7 @@ config := gen.Config{
     FieldNullable: false, // We handle nullable via WithDataTypeMap
     // ... other config
 }
-config.WithImportPkgPath("github.com/pivaldi/presence")
+config.WithImportPkgPath("github.com/pivaldi/presence/v2")
 
 g := gen.NewGenerator(config)
 g.WithDataTypeMap(dataTypeMap)

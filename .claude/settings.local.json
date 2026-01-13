@@ -39,7 +39,9 @@
       "Bash(/usr/local/go/bin/go doc:*)",
       "Bash(GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH go doc:*)",
       "Bash(GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH gofmt:*)",
-      "Bash(GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH go test:*)"
+      "Bash(GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH go test:*)",
+      "Bash(find:*)",
+      "Bash(GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH go mod tidy:*)"
     ]
   }
 }

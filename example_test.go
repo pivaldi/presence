@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pivaldi/presence"
+	"github.com/pivaldi/presence/v2"
 )
 
 // Example demonstrates basic usage of presence values.

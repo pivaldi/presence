@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/pivaldi/presence"
+	"github.com/pivaldi/presence/v2"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -24,7 +24,7 @@ any type through Go generics.
 
 Basic usage with presence values:
 
-	import "github.com/pivaldi/presence"
+	import "github.com/pivaldi/presence/v2"
 
 	// Create presence values
 	name := presence.FromValue("John Doe")

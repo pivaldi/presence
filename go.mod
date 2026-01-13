@@ -1,4 +1,4 @@
-module github.com/pivaldi/presence
+module github.com/pivaldi/presence/v2
 
 go 1.24.0
 
