@@ -10,6 +10,7 @@ This is a Go library (`github.com/pivaldi/presence`) that provides generic prese
 
 **Main library files (root directory):**
 - `presence.go` - Core interface `PresenceI[T]`, helper functions (`FromValue`, `Null`, `FromPtr`, `FromBool`), functional operations (`Map`, `MapOr`, `FlatMap`, `Filter`, `Or`), and type-specific scanning methods
+- `set.go` - `SetClause`/`Set` helpers that build a SQL `UPDATE ... SET` clause from set fields only (unset fields are skipped, nulls write NULL), with `Dollar`/`Question` placeholder styles
 - `of.go` - Generic `Of[T]` struct implementation with methods for SQL scanning (`Scan`), SQL value conversion (`Value`), JSON marshaling/unmarshaling, value access (`Get`, `GetOr`, `MustGet`, `Ptr`), and state management
 - `doc.go` - Package documentation
 

@@ -347,3 +347,39 @@ func ExampleFromBool() {
 	// Value: value
 	// Missing key is null: true
 }
+
+// ExampleSetClause demonstrates building a partial UPDATE from a PATCH request.
+func ExampleSetClause() {
+	type UpdateUserRequest struct {
+		Name  presence.Of[string] `json:"name,omitzero"`
+		Email presence.Of[string] `json:"email,omitzero"`
+		Age   presence.Of[int]    `json:"age,omitzero"`
+	}
+
+	var req UpdateUserRequest
+	_ = json.Unmarshal([]byte(`{"name": "John", "email": null}`), &req)
+
+	clause, args := presence.SetClause(presence.Dollar,
+		presence.Set("name", req.Name),   // set → updated
+		presence.Set("email", req.Email), // null → cleared
+		presence.Set("age", req.Age),     // unset → untouched
+	)
+
+	if clause == "" {
+		fmt.Println("nothing to update")
+
+		return
+	}
+
+	userID := 42
+	args = append(args, userID)
+	query := "UPDATE users SET " + clause + " WHERE id = " + presence.Dollar(len(args))
+
+	fmt.Println(query)
+	fmt.Println(len(args), "args")
+	// db.Exec(query, args...)
+
+	// Output:
+	// UPDATE users SET name = $1, email = $2 WHERE id = $3
+	// 3 args
+}

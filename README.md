@@ -297,6 +297,45 @@ func getArticle(db *sql.DB, id int64) (*Article, error) {
 }
 ```
 
+#### Partial Update (PATCH)
+
+`Value()` cannot tell an unset field from a null one: both bind as SQL NULL.
+To leave unset columns untouched, build the `SET` clause from the fields
+that are actually set with `SetClause`:
+
+```go
+type UpdateArticleRequest struct {
+    Title    presence.Of[string]    `json:"title,omitzero"`
+    Content  presence.Of[string]    `json:"content,omitzero"`
+    AuthorID presence.Of[int64]     `json:"authorId,omitzero"`
+}
+
+func updateArticle(db *sql.DB, id int64, req UpdateArticleRequest) error {
+    clause, args := presence.SetClause(presence.Dollar,
+        presence.Set("title", req.Title),
+        presence.Set("content", req.Content),
+        presence.Set("author_id", req.AuthorID),
+    )
+    if clause == "" {
+        return nil // nothing to update
+    }
+
+    args = append(args, id)
+    query := "UPDATE articles SET " + clause + " WHERE id = " + presence.Dollar(len(args))
+
+    _, err := db.Exec(query, args...)
+
+    return err
+}
+
+// {"title": "New"}                  → UPDATE articles SET title = $1 WHERE id = $2
+// {"title": "New", "authorId": null} → UPDATE articles SET title = $1, author_id = $2 WHERE id = $3
+// {}                                 → no query
+```
+
+Use `presence.Question` for `?` placeholders (MySQL, SQLite) or pass your own
+`func(n int) string`.
+
 ### Working with JSON/JSONB (PostgreSQL)
 
 Store complex Go types as JSON in PostgreSQL. Simply use the struct type directly - no wrapper needed:
@@ -522,6 +561,21 @@ adult := presence.Filter(age, func(a int) bool {
 
 // Or - return first non-null value
 name := presence.Or(preferredName, displayName, defaultName)
+```
+
+### Partial SQL Updates
+
+```go
+// Set - pair a column with a presence field
+a := presence.Set("name", req.Name)
+
+// SetClause - build "col = $1, ..." from the set fields only.
+// Unset fields are skipped, explicit nulls write NULL.
+clause, args := presence.SetClause(presence.Dollar, // or presence.Question
+    presence.Set("name", req.Name),
+    presence.Set("email", req.Email),
+)
+// clause == "" means nothing to update
 ```
 
 ## Testing
