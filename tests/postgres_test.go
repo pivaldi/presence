@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -372,4 +373,21 @@ func TestTimeInfinityPostgres(t *testing.T) {
 		require.NoError(t, db.QueryRow(`SELECT 'infinity'::timestamp`).Scan(&n))
 		assert.True(t, n.GetValue().Equal(presence.PosInfinity))
 	})
+}
+
+func TestFloat32NonFinitePostgres(t *testing.T) {
+	db := getDB(t)
+
+	for name, f := range map[string]float32{
+		"NaN":  float32(math.NaN()),
+		"+Inf": float32(math.Inf(1)),
+		"-Inf": float32(math.Inf(-1)),
+	} {
+		t.Run(name+" round-trips through a real column", func(t *testing.T) {
+			var n presence.Of[float32]
+			require.NoError(t, db.QueryRow(`SELECT $1::real`, presence.FromValue(f)).Scan(&n))
+			require.True(t, n.IsValue())
+			assert.Equal(t, math.Float32bits(f), math.Float32bits(*n.GetValue()))
+		})
+	}
 }

@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"testing"
@@ -671,5 +672,37 @@ func TestTimeInfinity(t *testing.T) {
 		v, err := presence.FromValue(now).Value()
 		require.NoError(t, err)
 		assert.Equal(t, now, v)
+	})
+}
+
+func TestFloat32NonFinite(t *testing.T) {
+	cases := map[string]float32{
+		"NaN":  float32(math.NaN()),
+		"+Inf": float32(math.Inf(1)),
+		"-Inf": float32(math.Inf(-1)),
+		"1.5":  1.5,
+	}
+
+	for name, f := range cases {
+		t.Run("Value of "+name+" is a float64", func(t *testing.T) {
+			v, err := presence.FromValue(f).Value()
+			require.NoError(t, err)
+			got, ok := v.(float64)
+			require.True(t, ok, "got %T", v)
+			assert.Equal(t, math.Float64bits(float64(f)), math.Float64bits(got))
+		})
+
+		t.Run("Scan of float64 "+name+" yields float32", func(t *testing.T) {
+			var n presence.Of[float32]
+			require.NoError(t, n.Scan(float64(f)))
+			require.True(t, n.IsValue())
+			assert.Equal(t, math.Float32bits(f), math.Float32bits(*n.GetValue()))
+		})
+	}
+
+	t.Run("Scan of nil yields null", func(t *testing.T) {
+		var n presence.Of[float32]
+		require.NoError(t, n.Scan(nil))
+		assert.True(t, n.IsNull())
 	})
 }

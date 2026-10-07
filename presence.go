@@ -214,7 +214,12 @@ func (n *Of[T]) scanFloat(v any) error {
 	}
 
 	if null.Valid {
-		n.SetValue(any(null.Float64).(T))
+		var val any = null.Float64
+		if _, ok := any(new(T)).(*float32); ok {
+			val = float32(null.Float64)
+		}
+
+		n.SetValue(val.(T)) //nolint:forcetypeassert // Scan only routes float32 and float64 here
 	} else {
 		n.handleScanNull()
 	}

@@ -235,6 +235,8 @@ func (n Of[T]) Value() (driver.Value, error) {
 		}
 
 		return *value, nil
+	case *float32:
+		return float64(*value), nil
 	case *string, *int16, *int32, *int, *int64, *float64, *bool, *uuid.UUID, string,
 		int16, int32, int, int64, float64, bool, time.Time, uuid.UUID:
 		return *n.val, nil
@@ -278,7 +280,7 @@ func (n *Of[T]) Scan(v any) error {
 		return n.scanUUID(v)
 	case *int16, *int32, *int, *int64:
 		return n.scanInt(v)
-	case *float64:
+	case *float32, *float64:
 		return n.scanFloat(v)
 	case *bool:
 		return n.scanBool(v)
