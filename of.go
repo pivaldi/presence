@@ -226,7 +226,16 @@ func (n Of[T]) Value() (driver.Value, error) {
 	}
 
 	switch value := any(n.val).(type) {
-	case *string, *int16, *int32, *int, *int64, *float64, *bool, *time.Time, *uuid.UUID, string,
+	case *time.Time:
+		switch {
+		case value.Equal(PosInfinity):
+			return "infinity", nil
+		case value.Equal(NegInfinity):
+			return "-infinity", nil
+		}
+
+		return *value, nil
+	case *string, *int16, *int32, *int, *int64, *float64, *bool, *uuid.UUID, string,
 		int16, int32, int, int64, float64, bool, time.Time, uuid.UUID:
 		return *n.val, nil
 	case any:

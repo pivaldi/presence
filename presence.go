@@ -238,6 +238,13 @@ func (n *Of[T]) scanBool(v any) error {
 	return nil
 }
 
+// PosInfinity and NegInfinity stand for PostgreSQL's infinity dates.
+// Defaults match github.com/piprim/boa so the two libraries agree.
+var (
+	PosInfinity = time.Date(9999, time.December, 31, 23, 59, 59, 999999999, time.UTC)
+	NegInfinity = time.Date(0, time.January, 1, 0, 0, 0, 1, time.UTC)
+)
+
 func (n *Of[T]) scanTime(v any) error {
 	if v == nil {
 		n.handleScanNull()
@@ -248,11 +255,19 @@ func (n *Of[T]) scanTime(v any) error {
 	null := new(sql.NullTime)
 
 	switch t := v.(type) {
-	case string:
-		var err error
-		null.Time, err = time.Parse(t, t)
-		if err != nil {
-			return fmt.Errorf("%w", err)
+	case string, []byte:
+		str, ok := t.(string)
+		if !ok {
+			str = string(t.([]byte)) //nolint:forcetypeassert // the case guarantees string or []byte
+		}
+
+		switch str {
+		case "infinity":
+			null.Time, null.Valid = PosInfinity, true
+		case "-infinity":
+			null.Time, null.Valid = NegInfinity, true
+		default:
+			return fmt.Errorf("cannot parse %q to time: only infinity and -infinity are accepted as text", str)
 		}
 	case time.Time:
 		err := null.Scan(v)

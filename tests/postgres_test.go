@@ -330,3 +330,46 @@ func TestInsertAndReadWithSqlx(t *testing.T) {
 		assert.True(t, *readTest.Data.GetValue().Bool.GetValue(), "Data.Bool should be true")
 	})
 }
+
+func TestTimeInfinityPostgres(t *testing.T) {
+	db := getDB(t)
+	cleanupTables(t, db, "type_test")
+
+	var posID, negID int64
+	require.NoError(t, db.QueryRow(`INSERT INTO type_test (time_val) VALUES ($1) RETURNING id`,
+		presence.FromValue(presence.PosInfinity)).Scan(&posID))
+	require.NoError(t, db.QueryRow(`INSERT INTO type_test (time_val) VALUES ($1) RETURNING id`,
+		presence.FromValue(presence.NegInfinity)).Scan(&negID))
+
+	t.Run("PosInfinity is stored as infinity", func(t *testing.T) {
+		var txt string
+		require.NoError(t, db.QueryRow(`SELECT time_val::text FROM type_test WHERE id = $1`, posID).Scan(&txt))
+		assert.Equal(t, "infinity", txt)
+	})
+
+	t.Run("NegInfinity is stored as -infinity", func(t *testing.T) {
+		var txt string
+		require.NoError(t, db.QueryRow(`SELECT time_val::text FROM type_test WHERE id = $1`, negID).Scan(&txt))
+		assert.Equal(t, "-infinity", txt)
+	})
+
+	t.Run("infinity reads back as PosInfinity", func(t *testing.T) {
+		var n presence.Of[time.Time]
+		require.NoError(t, db.QueryRow(`SELECT time_val FROM type_test WHERE id = $1`, posID).Scan(&n))
+		require.True(t, n.IsValue())
+		assert.True(t, n.GetValue().Equal(presence.PosInfinity))
+	})
+
+	t.Run("-infinity reads back as NegInfinity", func(t *testing.T) {
+		var n presence.Of[time.Time]
+		require.NoError(t, db.QueryRow(`SELECT time_val FROM type_test WHERE id = $1`, negID).Scan(&n))
+		require.True(t, n.IsValue())
+		assert.True(t, n.GetValue().Equal(presence.NegInfinity))
+	})
+
+	t.Run("literal infinity timestamp scans as PosInfinity", func(t *testing.T) {
+		var n presence.Of[time.Time]
+		require.NoError(t, db.QueryRow(`SELECT 'infinity'::timestamp`).Scan(&n))
+		assert.True(t, n.GetValue().Equal(presence.PosInfinity))
+	})
+}

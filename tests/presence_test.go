@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pivaldi/presence/v2"
 	"github.com/stretchr/testify/assert"
@@ -614,5 +615,61 @@ func TestCombinedOperations(t *testing.T) {
 		result := presence.Or(primary, secondary)
 		mapped := presence.Map(result, strings.ToUpper)
 		assert.Equal(t, "BACKUP", mapped.MustGet())
+	})
+}
+
+func TestTimeInfinity(t *testing.T) {
+	t.Run("scan string infinity sets PosInfinity", func(t *testing.T) {
+		var n presence.Of[time.Time]
+		require.NoError(t, n.Scan("infinity"))
+		require.True(t, n.IsValue())
+		assert.True(t, n.GetValue().Equal(presence.PosInfinity))
+	})
+
+	t.Run("scan string -infinity sets NegInfinity", func(t *testing.T) {
+		var n presence.Of[time.Time]
+		require.NoError(t, n.Scan("-infinity"))
+		require.True(t, n.IsValue())
+		assert.True(t, n.GetValue().Equal(presence.NegInfinity))
+	})
+
+	t.Run("scan []byte infinity sets PosInfinity", func(t *testing.T) {
+		var n presence.Of[time.Time]
+		require.NoError(t, n.Scan([]byte("infinity")))
+		require.True(t, n.IsValue())
+		assert.True(t, n.GetValue().Equal(presence.PosInfinity))
+	})
+
+	t.Run("scan []byte -infinity sets NegInfinity", func(t *testing.T) {
+		var n presence.Of[time.Time]
+		require.NoError(t, n.Scan([]byte("-infinity")))
+		require.True(t, n.IsValue())
+		assert.True(t, n.GetValue().Equal(presence.NegInfinity))
+	})
+
+	t.Run("scan other string errors instead of null", func(t *testing.T) {
+		var n presence.Of[time.Time]
+		err := n.Scan("2024-01-01")
+		require.Error(t, err)
+		assert.False(t, n.IsNull())
+	})
+
+	t.Run("Value of PosInfinity is the string infinity", func(t *testing.T) {
+		v, err := presence.FromValue(presence.PosInfinity).Value()
+		require.NoError(t, err)
+		assert.Equal(t, "infinity", v)
+	})
+
+	t.Run("Value of NegInfinity is the string -infinity", func(t *testing.T) {
+		v, err := presence.FromValue(presence.NegInfinity).Value()
+		require.NoError(t, err)
+		assert.Equal(t, "-infinity", v)
+	})
+
+	t.Run("Value of ordinary time stays a time.Time", func(t *testing.T) {
+		now := time.Now()
+		v, err := presence.FromValue(now).Value()
+		require.NoError(t, err)
+		assert.Equal(t, now, v)
 	})
 }
