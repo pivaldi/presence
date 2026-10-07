@@ -81,6 +81,7 @@ The test suite is located in `tests/` directory with its own `go.mod` that uses 
 - `postgres_test.go` - Integration tests with PostgreSQL database using testcontainers
 - `setup_test.go` - TestMain setup with testcontainers, database helpers, and cleanup utilities
 - `config_test.go` - Tests for configuration options (marshal/scan behaviors)
+- `yaml_test.go` - YAML marshaling/unmarshaling (yaml.v3 null nodes stay unset)
 
 **Test infrastructure:**
 - Uses testcontainers-go to automatically manage PostgreSQL 18 container

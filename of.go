@@ -219,6 +219,30 @@ func (n *Of[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MarshalYAML implements the yaml Marshaler interface (yaml.v2 and yaml.v3).
+// Unset and null values marshal as null.
+// Note: UnsetSkip behavior requires the struct field to have the `omitempty` tag.
+func (n Of[T]) MarshalYAML() (any, error) {
+	if !n.IsValue() {
+		return nil, nil
+	}
+
+	return n.val, nil
+}
+
+// UnmarshalYAML implements the yaml.v2-style Unmarshaler interface, which yaml.v3 also honors.
+// Note: yaml.v3 never calls an unmarshaler for a null node, so a YAML null leaves the value unset.
+func (n *Of[T]) UnmarshalYAML(unmarshal func(any) error) error {
+	var v T
+	if err := unmarshal(&v); err != nil {
+		return fmt.Errorf("presence yaml unmarshal: %w", err)
+	}
+
+	n.SetValue(v)
+
+	return nil
+}
+
 // Value implements the driver.Valuer interface.
 func (n Of[T]) Value() (driver.Value, error) {
 	if n.val == nil {

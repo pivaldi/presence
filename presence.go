@@ -42,6 +42,10 @@ type PresenceI[T any] interface {
 	MarshalJSON() ([]byte, error)
 	// UnmarshalJSON implements the decoding json interface.
 	UnmarshalJSON([]byte) error
+	// MarshalYAML implements the yaml Marshaler interface.
+	MarshalYAML() (any, error)
+	// UnmarshalYAML implements the yaml.v2-style Unmarshaler interface.
+	UnmarshalYAML(func(any) error) error
 	// Value implements the driver.Valuer interface.
 	Value() (driver.Value, error)
 	// Scan implements the sql.Scanner interface.

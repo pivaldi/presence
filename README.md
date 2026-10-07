@@ -533,6 +533,26 @@ err := json.Unmarshal([]byte(`null`), &value)
 // value.IsNull() == true
 ```
 
+### YAML Operations
+
+`Of[T]` works with `gopkg.in/yaml.v3`, `go.yaml.in/yaml/v3` and yaml.v2 (e.g. bun `dbfixture` fixtures). Unlike JSON, yaml's `omitempty` uses `IsZero()`, so unset fields are omitted under `UnsetSkip`.
+
+```go
+type Row struct {
+    Name presence.Of[string] `yaml:"name,omitempty"` // omitted when unset
+    Age  presence.Of[int]    `yaml:"age"`
+}
+
+// Marshal: values are plain, null and unset are null
+data, err := yaml.Marshal(row)
+
+// Unmarshal
+err := yaml.Unmarshal([]byte("age: 42"), &row)
+// row.Age.MustGet() == 42
+```
+
+**Note:** yaml.v3 never calls an unmarshaler for a null node, so `age: null` leaves `Age` **unset**, the same as a missing key.
+
 ### Functional Operations
 
 ```go
